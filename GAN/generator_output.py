@@ -22,7 +22,7 @@ mode_z = 'uniform'
 selected_epochs = [0,5,10,15]
 
 if tf.test.is_gpu_available():
-  device_name = tf.test_gpu_device_name()
+  device_name = '/GPU:0'
 else:
   device_name = '/CPU:0'
 
