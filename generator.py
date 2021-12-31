@@ -234,12 +234,15 @@ for epoch in range(1,num_epochs+1):
 
   epoch_samples.append(create_samples(gen_model, fixed_z).numpy())
 
-selected_epochs = [1,3,5,8,10]
+selected_epochs = [1,5,10,15,20]
+
+de_normalization_layer = tf.keras.layers.Rescaling(1./2., offset=0.5)
 
 fig = plt.figure(figsize=(10,14))
 for i,e in enumerate(selected_epochs):
   for j in range(3):
     ax = fig.add_subplot(len(selected_epochs), 3, i*3+j+1)
     image = epoch_samples[e-1][j]
+    image = de_normalization_layer(image)
     ax.imshow(image)
 fig.savefig('test')
