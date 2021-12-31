@@ -159,6 +159,8 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     
     gen_checkpoint_path = checkpoints + "/gen-{epoch:04d}.ckpt"
     gen_checkpoint_dir = os.path.dirname(gen_checkpoint_path)
+
+    gen_model.save(gen_checkpoint_dir + "/gen-model")
     
     # Create Discriminator #
     disc_model = make_dcgan_discriminator(dropout)
@@ -168,6 +170,8 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
     disc_checkpoint_path = checkpoints + "/disc-{epoch:04d}.ckpt"
     disc_checkpoint_dir = os.path.dirname(disc_checkpoint_path)
+    
+    disc_model.save(disc_checkpoint_dir + "/disc-model")
     
     train_ds = get_dataset(data, batch_size)
     
