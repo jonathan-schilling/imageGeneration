@@ -6,8 +6,8 @@ import PIL.Image
 import pathlib
 import matplotlib
 import shutil
+from generator_output import plot_image, create_samples
 
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import argparse
 import time
@@ -142,9 +142,20 @@ def get_dataset(data, batch_size):
     train_ds = train_ds.shuffle(60).cache()
     return train_ds
 
+def display_examples(samples, number_of_images, output_image, info_text):
+    figure = plt.figure(figsize=(20, 10))
+    for j in range(number_of_images):
+        ax = figure.add_subplot(1, number_of_images, j + 1)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        image = samples[j]
+        plot_image(ax, image)
+    figure.suptitle(info_text, size="xx-large")
+    figure.savefig(output_image + ".pdf")
+    plt.close(figure)
 
 def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
-                 learning_rate_gen):
+                 learning_rate_gen, output_image):
 
     if os.path.exists(checkpoints):
       shutil.rmtree(checkpoints)
@@ -229,11 +240,16 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
             epoch_d_vals.append((d_probs_real.numpy(), d_probs_fake.numpy()))
 
-        print(
-            'Epoch {:03d} | ET {:.2f} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
+        info_text = 'Epoch {:03d} | ET {:.2f} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
                 epoch, (time.time() - start_time) / 60, *list(np.mean(epoch_losses, axis=0))
             )
-        )
+
+        print(info_text)
+        
+        number_of_preview_images = 3
+        fixed_z = tf.random.uniform(shape=(number_of_preview_images, z_size), minval=-1, maxval=1)
+        samples = create_samples(gen_model, fixed_z, number_of_preview_images).numpy()
+        display_examples(samples, number_of_preview_images, output_image, info_text) 
 
         ## Save model state ##
         if epoch % checkpoint_frequency == 0:
@@ -259,7 +275,9 @@ if __name__ == '__main__':
                         help="The learning rate for the discriminator to use. Default = 1e-4")
     parser.add_argument('-lg', '--learnRateGen', type=float, dest="learnRateGen", default=0.001,
                         help="The learning rate for the generator to use. Default 1e-3")
+    parser.add_argument('-o', '--output', type=str, dest="output", default="live",
+                        help="The name of the file to use for the live-image")
 
     args = parser.parse_args()
     train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRateDisc,
-                 args.learnRateGen)
+                 args.learnRateGen, args.output)

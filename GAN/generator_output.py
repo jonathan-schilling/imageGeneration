@@ -19,6 +19,10 @@ img_width = 128
 image_size = (72, 128, 3)
 z_size = 128
 
+def create_samples(g_model, input_z, batch_size):
+    g_output = g_model(input_z, training=False)
+    images = tf.reshape(g_output, (batch_size, *image_size))
+    return (images + 1) / 2.0
 
 def output_results(batch_size, checkpoints, epochs, every, output_image):
     if tf.test.is_gpu_available():
@@ -33,43 +37,45 @@ def output_results(batch_size, checkpoints, epochs, every, output_image):
     gen_checkpoint_path = checkpoints + "/gen-{epoch:04d}.ckpt"
     gen_checkpoint_dir = os.path.dirname(gen_checkpoint_path)
 
-    def create_samples(g_model, input_z):
-        g_output = g_model(input_z, training=False)
-        images = tf.reshape(g_output, (batch_size, *image_size))
-        return (images + 1) / 2.0
-
     epoch_samples = []
 
     fixed_z = tf.random.uniform(shape=(batch_size, z_size), minval=-1, maxval=1)
 
     chps = glob.glob(gen_checkpoint_dir + "/gen-*index")
+    batches_used = [y.split("-")[1].split(".")[0] for y in chps]
 
     for i,checkpoint in enumerate(chps):
         if i % every == 0:
             gen_model.load_weights(gen_checkpoint_dir + "/" + Path(checkpoint).stem)
-            epoch_samples.append(create_samples(gen_model, fixed_z).numpy())
+            epoch_samples.append(create_samples(gen_model, fixed_z, batch_size).numpy())
 
-    de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
-
-    fig = plt.figure(figsize=(10, 14))
+    fig, axes = plt.subplots(figsize=(20, 5*len(epoch_samples)), nrows=len(chps) // every, ncols=batch_size, sharex=True, sharey=True)
     n = 0
     for i in range(len(chps)):
         if i % every == 0:
-            for j in range(3):
-                ax = fig.add_subplot(epochs // every, 3, n * 3 + j + 1)
+            for j in range(batch_size):
+                ax = axes[i,j]
                 image = epoch_samples[n][j]
-                image = de_normalization_layer(image)
-                ax.imshow(image)
+                ax.get_xaxis().set_visible(False)
+                ax.get_yaxis().set_visible(False)
+                ax.set_title(batches_used[n])
+                plot_image(ax, image)
             n += 1
-    fig.savefig(output_image)
+    
+    fig.savefig(output_image + ".pdf")
+
+de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
+def plot_image(ax, image):
+    image = de_normalization_layer(image)
+    ax.imshow(image)
 
 
 if __name__ == '__main__':
     # Parse Arguments #
     parser = argparse.ArgumentParser(description='Train GAN to generate landscapes')
     parser.add_argument('every', type=int, help='Produce example for every xth checkpoint')
-    parser.add_argument('bSize', type=int, help='Batch Size to use')
     parser.add_argument('epochs', type=int, help='Epochs available')
+    parser.add_argument('-b', '--bSize', type=int, dest='bSize', help='Batch Size to use', default=3)
     parser.add_argument('-c', '--checkpoints', type=str, dest="checkpoints", default="training",
                         help="The output directory where the checkpoints are saved.")
     parser.add_argument('-o', '--output', type=str, dest="output", default="training",
