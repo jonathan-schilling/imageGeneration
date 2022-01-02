@@ -155,9 +155,9 @@ def display_examples(samples, number_of_images, output_image, info_text):
     plt.close(figure)
 
 def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
-                 learning_rate_gen, output_image):
+                 learning_rate_gen, output_image, continue_):
 
-    if os.path.exists(checkpoints):
+    if not continue_ and os.path.exists(checkpoints):
       shutil.rmtree(checkpoints)
 
     # Check GPU #
@@ -175,10 +175,14 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     print("Using Generator-Model:")
     gen_model.summary()
 
-    gen_checkpoint_path = checkpoints + "/gen-{epoch:04d}.ckpt"
+    gen_checkpoint_path = checkpoints + "/generator/" + "/{epoch:04d}.ckpt"
     gen_checkpoint_dir = os.path.dirname(gen_checkpoint_path)
 
-    gen_model.save(gen_checkpoint_dir + "/gen-model")
+    if not continue_:
+        gen_model.save(gen_checkpoint_dir + "/gen-model")
+
+    if continue_:
+        gen_model.load_weights(tf.train.latest_checkpoint(gen_checkpoint_dir))
 
     # Create Discriminator #
     disc_model = make_dcgan_discriminator(dropout)
@@ -186,14 +190,23 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     print("Using Discriminator-Model:")
     disc_model.summary()
 
-    disc_checkpoint_path = checkpoints + "/disc-{epoch:04d}.ckpt"
+    disc_checkpoint_path = checkpoints  + "/discriminator/" + "/{epoch:04d}.ckpt"
     disc_checkpoint_dir = os.path.dirname(disc_checkpoint_path)
 
-    disc_model.save(disc_checkpoint_dir + "/disc-model")
+    if not continue_:
+        disc_model.save(disc_checkpoint_dir + "/disc-model")
+    
+    if continue_:
+        disc_model.load_weights(tf.train.latest_checkpoint(disc_checkpoint_dir))
 
     train_ds = get_dataset(data, batch_size)
 
     # Training #
+
+    if continue_:
+        start_epoch = int(tf.train.latest_checkpoint(gen_checkpoint_dir).split("/")[-1].split(".")[-2])
+    else:
+        start_epoch = 0
 
     loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
     g_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_gen)
@@ -201,7 +214,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
     start_time = time.time()
 
-    for epoch in range(num_epochs):
+    for epoch in range(start_epoch, num_epochs):
 
         epoch_losses, epoch_d_vals = [], []
 
@@ -277,7 +290,8 @@ if __name__ == '__main__':
                         help="The learning rate for the generator to use. Default 1e-3")
     parser.add_argument('-o', '--output', type=str, dest="output", default="live",
                         help="The name of the file to use for the live-image")
+    parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False, help="Continue training (default: Start from the beginning)")
 
     args = parser.parse_args()
     train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRateDisc,
-                 args.learnRateGen, args.output)
+                 args.learnRateGen, args.output, args.continue_)

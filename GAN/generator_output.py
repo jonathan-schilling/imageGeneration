@@ -32,10 +32,10 @@ def output_results(batch_size, checkpoints, epochs, every, output_image, start_e
 
     print(device_name)
 
-    gen_model = tf.keras.models.load_model(checkpoints + "/gen-model")
-    gen_model.summary()
-    gen_checkpoint_path = checkpoints + "/gen-{epoch:04d}.ckpt"
+    gen_checkpoint_path = checkpoints + "/generator/" + "/{epoch:04d}.ckpt"
     gen_checkpoint_dir = os.path.dirname(gen_checkpoint_path)
+    gen_model = tf.keras.models.load_model(gen_checkpoint_dir + "/gen-model")
+    gen_model.summary()
 
     epoch_samples = []
 
