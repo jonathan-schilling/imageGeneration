@@ -240,6 +240,7 @@ class WGAN(object):
         c1_hist, c2_hist, g_hist = list(), list(), list()
         # manually enumerate epochs
         for i in range(epochs):
+            print("####### Epoch", i, "#######")
             for j, (batch, _) in enumerate(self.dataset):
                 # update the critic more than the generator
                 c1_tmp, c2_tmp = list(), list()
