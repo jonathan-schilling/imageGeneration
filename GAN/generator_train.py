@@ -119,7 +119,7 @@ def make_dcgan_discriminator(dropout_rate, input_size=(72, 128, 3)):
         ),
         tf.keras.layers.LeakyReLU(alpha=0.1),
         tf.keras.layers.Dropout(dropout_rate),
-
+        tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(1)
     ])
 
