@@ -144,12 +144,13 @@ def get_dataset(data, batch_size):
 
 def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate):
     # Check GPU #
-    if tf.test.is_gpu_available():
-      device_name = tf.test_gpu_device_name()
+    if len(tf.config.list_physical_devices('GPU')) != 0:
+      #device_name = tf.config.list_physical_devices('GPU')[0].name
+      device_name = '/GPU:0'
     else:
       device_name = '/CPU:0'
-    
-    print("Using device:", device_name)
+
+    print(device_name)
 
     # Create Generator #
     gen_model = make_dcgan_generator()
@@ -242,8 +243,8 @@ if __name__ == '__main__':
     parser.add_argument('epochs', type=int, help='Number of epochs to train')
     parser.add_argument('-c', '--checkpoints', type=str, dest="checkpoints", default="training", help="The output directory where the checkpoints are saved. It will be created if it dosen't exist and overritten (!) if it does.")
     parser.add_argument('-d', '--data', type=str, dest="data", default="bilderNeuro", help="The directory containing subdirectories (labels) with images to use for training.")
-    parser.add_argument('-r', '--dropout', type=int, dest="dropout", default=0.2, help="The dropout rate to use for the discriminator")
-    parser.add_argument('-l', '--learnRate', type=int, dest="learnRate", default=0.001, help="The learning rate to use")
+    parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.2, help="The dropout rate to use for the discriminator")
+    parser.add_argument('-l', '--learnRate', type=float, dest="learnRate", default=0.001, help="The learning rate to use")
 
     args = parser.parse_args()
     train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs+1, args.dropout, args.learnRate)
