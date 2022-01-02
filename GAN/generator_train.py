@@ -139,7 +139,7 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.shuffle(60).cache()
+    train_ds = train_ds.cache().shuffle(60)
     return train_ds
 
 def display_examples(samples, number_of_images, output_image, info_text):
