@@ -24,7 +24,7 @@ def create_samples(g_model, input_z, batch_size):
     images = tf.reshape(g_output, (batch_size, *image_size))
     return (images + 1) / 2.0
 
-def output_results(batch_size, checkpoints, epochs, every, output_image):
+def output_results(batch_size, checkpoints, epochs, every, output_image, start_epoch):
     if tf.test.is_gpu_available():
         device_name = '/GPU:0'
     else:
@@ -42,25 +42,26 @@ def output_results(batch_size, checkpoints, epochs, every, output_image):
     fixed_z = tf.random.uniform(shape=(batch_size, z_size), minval=-1, maxval=1)
 
     chps = glob.glob(gen_checkpoint_dir + "/gen-*index")
-    batches_used = [y.split("-")[1].split(".")[0] for y in chps]
+    batches_existing = [int(y.split("-")[1].split(".")[0]) for y in chps]
+    batches_used = []
 
+    n = 0
     for i,checkpoint in enumerate(chps):
-        if i % every == 0:
+        if i % every == 0 and batches_existing[n] >= start_epoch:
             gen_model.load_weights(gen_checkpoint_dir + "/" + Path(checkpoint).stem)
             epoch_samples.append(create_samples(gen_model, fixed_z, batch_size).numpy())
+            batches_used.append(batches_existing[n])
+        n += 1
 
-    fig, axes = plt.subplots(figsize=(20, 5*len(epoch_samples)), nrows=len(chps) // every, ncols=batch_size, sharex=True, sharey=True)
-    n = 0
-    for i in range(len(chps)):
-        if i % every == 0:
-            for j in range(batch_size):
-                ax = axes[i,j]
-                image = epoch_samples[n][j]
-                ax.get_xaxis().set_visible(False)
-                ax.get_yaxis().set_visible(False)
-                ax.set_title(batches_used[n])
-                plot_image(ax, image)
-            n += 1
+    fig, axes = plt.subplots(figsize=(20, 5*len(epoch_samples)), nrows=len(epoch_samples), ncols=batch_size, sharex=True, sharey=True)
+    for i,e in enumerate(epoch_samples):
+        for j in range(batch_size):
+            ax = axes[i,j]
+            image = e[j]
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            ax.set_title(batches_used[i])
+            plot_image(ax, image)
     
     fig.savefig(output_image + ".pdf")
 
@@ -80,6 +81,7 @@ if __name__ == '__main__':
                         help="The output directory where the checkpoints are saved.")
     parser.add_argument('-o', '--output', type=str, dest="output", default="training",
                         help="The name of the image to (over-)write")
+    parser.add_argument('-s', '--start', type=int, dest="start", default=0, help="Start at this epoch")
 
     args = parser.parse_args()
-    output_results(args.bSize, args.checkpoints, args.epochs, args.every, args.output)
+    output_results(args.bSize, args.checkpoints, args.epochs, args.every, args.output, args.start)
