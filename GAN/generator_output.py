@@ -28,7 +28,7 @@ def output_results(batch_size, checkpoints, epochs, every, output_image):
     gen_model = tf.keras.models.load_model(checkpoints + "/gen-model")
     gen_model.summary()
     
-    gen_checkpoint_path = "training_1/gen-{epoch:04d}.ckpt"
+    gen_checkpoint_path = checkpoints + "/gen-{epoch:04d}.ckpt"
     gen_checkpoint_dir = os.path.dirname(gen_checkpoint_path)
     
     def create_samples(g_model, input_z):
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     # Parse Arguments #
     parser = argparse.ArgumentParser(description='Train GAN to generate landscapes')
     parser.add_argument('bSize', type=int, help='Batch Size to use')
-    parser.add_argument('epochs', type=int, help='Epochs avaiable')
+    parser.add_argument('epochs', type=int, help='Epochs available')
     parser.add_argument('every', type=int, help='Pint example every x epochs')
     parser.add_argument('-c', '--checkpoints', type=str, dest="checkpoints", default="training", help="The output directory where the checkpoints are saved.")
     parser.add_argument('-o', '--output', type=str, dest="output", default="training", help="The name of the image to (over-)write")
