@@ -156,7 +156,7 @@ class WGAN(object):
             shutil.rmtree(path_like)
         os.mkdir(path_like)
         os.mkdir(path.join(path_like, "models"))
-        path.join(path_like, "samples")
+        os.mkdir(path.join(path_like, "samples"))
 
         self.dataset = dataset
         self.image_size = image_size
@@ -202,9 +202,9 @@ class WGAN(object):
     # generate samples and save as a plot and save the model
     def summarize_performance(self, step, n_samples=100):
         # prepare fake examples
-        X, _ = self.generate_fake_samples(n_samples)
+        x, _ = self.generate_fake_samples(n_samples)
         # scale from [-1,1] to [0,1]
-        X = (X + 1) / 2.0
+        x = (x + 1) / 2.0
         # plot images
         for i in range(10 * 10):
             # define subplot
@@ -212,7 +212,7 @@ class WGAN(object):
             # turn off axis
             pyplot.axis('off')
             # plot raw pixel data
-            pyplot.imshow(X[i, :, :, 0], cmap='gray_r')
+            pyplot.imshow(x[i])
         # save plot to file
         filename1 = 'generated_plot_%04d.png' % (step + 1)
         pyplot.savefig(path.join(self.path, "samples", filename1))
