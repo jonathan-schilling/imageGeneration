@@ -146,7 +146,8 @@ def get_dataset(data, batch_size):
     return train_ds
 
 
-def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate):
+def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
+                 learning_rate_gen):
     # Check GPU #
     if len(tf.config.list_physical_devices('GPU')) != 0:
         # device_name = tf.config.list_physical_devices('GPU')[0].name
@@ -183,8 +184,8 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     # Training #
 
     loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-    g_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    d_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    g_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_gen)
+    d_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_disc)
 
     start_time = time.time()
 
@@ -242,17 +243,22 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 if __name__ == '__main__':
     # Parse Arguments #
     parser = argparse.ArgumentParser(description='Train GAN to generate landscapes')
-    parser.add_argument('chps', type=int, help='Take checkpoint every x epochs')
     parser.add_argument('bSize', type=int, help='Batch Size to use')
     parser.add_argument('epochs', type=int, help='Number of epochs to train')
-    parser.add_argument('-c', '--checkpoints', type=str, dest="checkpoints", default="training",
-                        help="The output directory where the checkpoints are saved. It will be created if it dosen't exist and overritten (!) if it does.")
+    parser.add_argument('-c', '--checkpoints', type=int, dest="chps", default=5,
+                        help='Take checkpoint every x epochs. Default = 5')
+    parser.add_argument('-cd', '--checkpointDir', type=str, dest="checkpoints", default="training",
+                        help="The output directory where the checkpoints are saved. It will be created if it dosen't "
+                             "exist and overritten (!) if it does.")
     parser.add_argument('-d', '--data', type=str, dest="data", default="bilderNeuro",
                         help="The directory containing subdirectories (labels) with images to use for training.")
     parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.2,
                         help="The dropout rate to use for the discriminator")
-    parser.add_argument('-l', '--learnRate', type=float, dest="learnRate", default=0.001,
-                        help="The learning rate to use")
+    parser.add_argument('-ld', '--learnRateDisc', type=float, dest="learnRateDisc", default=0.0001,
+                        help="The learning rate for the discriminator to use. Default = 1e-4")
+    parser.add_argument('-lg', '--learnRateGen', type=float, dest="learnRateGen", default=0.001,
+                        help="The learning rate for the generator to use. Default 1e-3")
 
     args = parser.parse_args()
-    train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRate)
+    train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRateDisc,
+                 args.learnRateGen)
