@@ -5,6 +5,7 @@ import PIL
 import PIL.Image
 import pathlib
 import matplotlib
+import shutil
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -144,6 +145,10 @@ def get_dataset(data, batch_size):
 
 def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
                  learning_rate_gen):
+
+    if os.path.exists(checkpoints):
+      shutil.rmtree(checkpoints)
+
     # Check GPU #
     if len(tf.config.list_physical_devices('GPU')) != 0:
         # device_name = tf.config.list_physical_devices('GPU')[0].name

@@ -42,7 +42,9 @@ def output_results(batch_size, checkpoints, epochs, every, output_image):
 
     fixed_z = tf.random.uniform(shape=(batch_size, z_size), minval=-1, maxval=1)
 
-    for i,checkpoint in enumerate(glob.glob(gen_checkpoint_dir + "/*index")):
+    chps = glob.glob(gen_checkpoint_dir + "/gen-*index")
+
+    for i,checkpoint in enumerate(chps):
         if i % every == 0:
             gen_model.load_weights(gen_checkpoint_dir + "/" + Path(checkpoint).stem)
             epoch_samples.append(create_samples(gen_model, fixed_z).numpy())
@@ -51,11 +53,11 @@ def output_results(batch_size, checkpoints, epochs, every, output_image):
 
     fig = plt.figure(figsize=(10, 14))
     n = 0
-    for i in range(epochs):
+    for i in range(len(chps)):
         if i % every == 0:
             for j in range(3):
                 ax = fig.add_subplot(epochs // every, 3, n * 3 + j + 1)
-                image = epoch_samples[i][j]
+                image = epoch_samples[n][j]
                 image = de_normalization_layer(image)
                 ax.imshow(image)
             n += 1
