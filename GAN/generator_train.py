@@ -11,6 +11,7 @@ from generator_output import plot_image, create_samples
 import matplotlib.pyplot as plt
 import argparse
 import time
+import ntpath
 
 tf.random.set_seed(1)
 np.random.seed(1)
@@ -204,7 +205,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     # Training #
 
     if continue_:
-        start_epoch = int(tf.train.latest_checkpoint(gen_checkpoint_dir).split("/")[-1].split(".")[-2])
+        start_epoch = int(ntpath.basename(tf.train.latest_checkpoint(gen_checkpoint_dir)).split(".")[-2])
     else:
         start_epoch = 0
 

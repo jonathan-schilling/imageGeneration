@@ -11,6 +11,7 @@ from pathlib import Path
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import argparse
+import ntpath
 
 # Parameters #
 
@@ -42,7 +43,7 @@ def output_results(batch_size, checkpoints, epochs, every, output_image, start_e
     fixed_z = tf.random.uniform(shape=(batch_size, z_size), minval=-1, maxval=1)
 
     chps = glob.glob(gen_checkpoint_dir + "/*index")
-    batches_existing = [int(y.split("/")[-1].split(".")[-3]) for y in chps]
+    batches_existing = [int(ntpath.basename(y).split(".")[-3]) for y in chps]
     batches_used = []
 
     n = 0
