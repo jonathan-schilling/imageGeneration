@@ -41,8 +41,8 @@ def output_results(batch_size, checkpoints, epochs, every, output_image, start_e
 
     fixed_z = tf.random.uniform(shape=(batch_size, z_size), minval=-1, maxval=1)
 
-    chps = glob.glob(gen_checkpoint_dir + "/gen-*index")
-    batches_existing = [int(y.split("-")[1].split(".")[0]) for y in chps]
+    chps = glob.glob(gen_checkpoint_dir + "/*index")
+    batches_existing = [int(y.split("/")[-1].split(".")[-3]) for y in chps]
     batches_used = []
 
     n = 0
