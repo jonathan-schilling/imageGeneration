@@ -150,8 +150,10 @@ def define_gan(generator, critic):
 
 
 class WGAN(object):
-    def __init__(self, dataset, image_size, bach_size, critic_learn_iterations, path_like="training", load=False):
+    def __init__(self, dataset, image_size, bach_size, critic_learn_iterations, path_like="training", load=False,
+                 save_interval=20):
 
+        self.save_interval = save_interval
         self.path = path_like
         if not load:
             if path.exists(path_like):
@@ -230,11 +232,21 @@ class WGAN(object):
             # plot raw pixel data
             pyplot.imshow(x[i])
         # save plot to file
-        filename1 = 'generated_plot_%04d.pdf' % (step + 1)
+        filename1 = 'generated_plot_%04d.pdf' % step
         pyplot.savefig(path.join(self.path, "samples", filename1))
         pyplot.close()
+
+        # remove previous model if it is not in the save interval
+        if (step - 1) % self.save_interval != 0:
+            prev_filename = 'model_%04d.h5' % (step-1)
+            try:
+                for folder in ["g_models", "c_models"]:
+                    os.remove(path.join(self.path, folder, prev_filename))
+            except OSError:
+                print("Could not remove model with filename", prev_filename)
+
         # save the generator model
-        filename2 = 'model_%04d.h5' % (step + 1)
+        filename2 = 'model_%04d.h5' % step
         self.generator_model.save(path.join(self.path, "g_models", filename2))
         self.critic_model.save(path.join(self.path, "c_models", filename2))
         print('>Saved: %s and %s' % (filename1, filename2))
