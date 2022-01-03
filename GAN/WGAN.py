@@ -1,6 +1,7 @@
 import os
 import shutil
 from os import path
+from time import time
 
 from numpy import expand_dims, prod
 from numpy import mean
@@ -9,7 +10,7 @@ from numpy.random import randn
 from numpy.random import randint
 from tensorflow.keras import backend
 from tensorflow.keras.optimizers import RMSprop
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Reshape
 from tensorflow.keras.layers import Flatten
@@ -92,7 +93,7 @@ def define_critic(in_shape=(28, 28, 1)):
         Dense(1)
     ])
     # compile model
-    opt = RMSprop(lr=0.00005)
+    opt = RMSprop(learning_rate=0.00005)
     model.compile(loss=wasserstein_loss, optimizer=opt)
     return model
 
@@ -143,20 +144,22 @@ def define_gan(generator, critic):
     # add the critic
     model.add(critic)
     # compile model
-    opt = RMSprop(lr=0.00005)
+    opt = RMSprop(learning_rate=0.00005)
     model.compile(loss=wasserstein_loss, optimizer=opt)
     return model
 
 
 class WGAN(object):
-    def __init__(self, dataset, image_size, bach_size, critic_learn_iterations, path_like="training"):
+    def __init__(self, dataset, image_size, bach_size, critic_learn_iterations, path_like="training", load=False):
 
         self.path = path_like
-        if path.exists(path_like):
-            shutil.rmtree(path_like)
-        os.mkdir(path_like)
-        os.mkdir(path.join(path_like, "models"))
-        os.mkdir(path.join(path_like, "samples"))
+        if not load:
+            if path.exists(path_like):
+                shutil.rmtree(path_like)
+            os.mkdir(path_like)
+            os.mkdir(path.join(path_like, "g_models"))
+            os.mkdir(path.join(path_like, "c_models"))
+            os.mkdir(path.join(path_like, "samples"))
 
         self.dataset = dataset
         self.image_size = image_size
@@ -164,9 +167,22 @@ class WGAN(object):
         self.critic_learn_iterations = critic_learn_iterations
         self.latent_dim = 128
 
-        self.generator_model = define_generator(self.latent_dim, image_size)
+        if load:
+            g_models = os.listdir(path.join(path_like, "g_models"))
+            c_models = os.listdir(path.join(path_like, "c_models"))
+            g_models.sort()
+            c_models.sort()
+            self.epoch = int(g_models[-1][-7:-3])
+            self.generator_model = load_model(path.join(path_like, "g_models", g_models[-1]))
+            self.critic_model = load_model(path.join(path_like, "c_models", c_models[-1]),
+                                           custom_objects={"ClipConstraint": ClipConstraint,
+                                                           "wasserstein_loss": wasserstein_loss})
+        else:
+            self.epoch = 0
+            self.generator_model = define_generator(self.latent_dim, image_size)
+            self.critic_model = define_critic(image_size)
+
         self.generator_model.summary()
-        self.critic_model = define_critic(image_size)
         self.critic_model.summary()
         self.gan_model = define_gan(self.generator_model, self.critic_model)
 
@@ -194,10 +210,10 @@ class WGAN(object):
         # generate points in latent space
         x_input = self.generate_latent_points(n_samples)
         # predict outputs
-        X = self.generator_model.predict(x_input)
+        x = self.generator_model.predict(x_input)
         # create class labels with 1.0 for 'fake'
         y = ones((n_samples, 1))
-        return X, y
+        return x, y
 
     # generate samples and save as a plot and save the model
     def summarize_performance(self, step, n_samples=100):
@@ -214,12 +230,13 @@ class WGAN(object):
             # plot raw pixel data
             pyplot.imshow(x[i])
         # save plot to file
-        filename1 = 'generated_plot_%04d.png' % (step + 1)
+        filename1 = 'generated_plot_%04d.pdf' % (step + 1)
         pyplot.savefig(path.join(self.path, "samples", filename1))
         pyplot.close()
         # save the generator model
         filename2 = 'model_%04d.h5' % (step + 1)
-        self.generator_model.save(path.join(self.path, "models", filename2))
+        self.generator_model.save(path.join(self.path, "g_models", filename2))
+        self.critic_model.save(path.join(self.path, "c_models", filename2))
         print('>Saved: %s and %s' % (filename1, filename2))
 
     # create a line plot of loss for the gan and save to file
@@ -229,7 +246,7 @@ class WGAN(object):
         pyplot.plot(d2_hist, label='crit_fake loss')
         pyplot.plot(g_hist, label='gen loss')
         pyplot.legend()
-        pyplot.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
+        pyplot.savefig(path.join(self.path, f'plot_line_plot_loss_{self.epoch}.png'))
         pyplot.close()
 
     def train(self, epochs):
@@ -238,9 +255,15 @@ class WGAN(object):
         critic_learn_count = 0
         # lists for keeping track of loss
         c1_hist, c2_hist, g_hist = list(), list(), list()
+        # set start time
+        start_time = time()
+        epochs = epochs - self.epoch
         # manually enumerate epochs
         for i in range(epochs):
-            print("####### Epoch", i, "#######")
+            self.epoch += 1
+            current_time = time() - start_time
+            minutes = f"{(current_time%1)*60:.2f}"[2:]
+            print("####### Epoch", self.epoch, f"Time: {int(current_time):02d}:{minutes} #######")
             for j, (batch, _) in enumerate(self.dataset):
                 # update the critic more than the generator
                 c1_tmp, c2_tmp = list(), list()
@@ -269,7 +292,7 @@ class WGAN(object):
                     # summarize loss on this batch
                     print('>RealLoss=%.3f, FakeLoss=%.3f GeneratorLoss=%.3f' % (c1_hist[-1], c2_hist[-1], g_loss))
             # evaluate the model performance every 'epoch'
-            self.summarize_performance(i)
+            self.summarize_performance(self.epoch)
         # line plots of loss
         self.plot_history(c1_hist, c2_hist, g_hist)
 
