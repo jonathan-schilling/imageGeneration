@@ -295,7 +295,7 @@ class WGAN(object):
                     c1_hist.append(mean(c1_tmp))
                     c2_hist.append(mean(c2_tmp))
                     # prepare points in latent space as input for the generator
-                    x_gan = self.generate_latent_points(self.bach_size)
+                    x_gan = self.generate_latent_points(batch.shape[0])
                     # create inverted labels for the fake samples
                     y_gan = -ones((self.bach_size, 1))
                     # update the generator via the critic's error
