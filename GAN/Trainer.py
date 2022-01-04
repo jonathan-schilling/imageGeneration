@@ -23,6 +23,6 @@ def get_dataset(data, batch_size):
     return train_ds
 
 
-wgan = WGAN(get_dataset("bilderNeuro", 32), (img_height, img_width, 3), 32, 5, load=False)
+wgan = WGAN(get_dataset("bilderNeuro", 32), (img_height, img_width, 3), 32, 5, load=True)
 
 wgan.train(5000)

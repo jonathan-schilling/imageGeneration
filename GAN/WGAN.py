@@ -1,7 +1,7 @@
 import os
 import shutil
 from os import path
-from time import time
+from time import time, strftime, gmtime
 
 from numpy import expand_dims, prod
 from numpy import mean
@@ -25,6 +25,8 @@ from matplotlib import pyplot
 
 # clip model weights to a given hypercube
 from tensorflow.python.keras import Input
+
+from generator_output import plot_image
 
 
 class ClipConstraint(Constraint):
@@ -224,13 +226,16 @@ class WGAN(object):
         # scale from [-1,1] to [0,1]
         x = (x + 1) / 2.0
         # plot images
+        figure = pyplot.figure(figsize=(26, 26))
         for i in range(10 * 10):
             # define subplot
-            pyplot.subplot(10, 10, 1 + i)
+            ax = figure.add_subplot(10, 10, i + 1)
             # turn off axis
-            pyplot.axis('off')
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
             # plot raw pixel data
-            pyplot.imshow(x[i])
+            ax.imshow(x[i])
+
         # save plot to file
         filename1 = 'generated_plot_%04d.jpg' % step
         pyplot.savefig(path.join(self.path, "samples", filename1))
@@ -263,7 +268,6 @@ class WGAN(object):
 
     def train(self, epochs):
         # calculate the size of half a batch of samples
-        half_batch = int(self.bach_size / 2)
         critic_learn_count = 0
         # lists for keeping track of loss
         c1_hist, c2_hist, g_hist = list(), list(), list()
@@ -274,8 +278,7 @@ class WGAN(object):
         for i in range(epochs):
             self.epoch += 1
             current_time = time() - start_time
-            minutes = f"{(current_time%1)*60:.2f}"[2:]
-            print("####### Epoch", self.epoch, f"Time: {int(current_time):02d}:{minutes} #######")
+            print("####### Epoch", self.epoch, f"Time: {strftime('%H:%M:%S', gmtime(current_time))} #######")
             for j, (batch, _) in enumerate(self.dataset):
                 # update the critic more than the generator
                 c1_tmp, c2_tmp = list(), list()
@@ -302,8 +305,10 @@ class WGAN(object):
                     g_loss = self.gan_model.train_on_batch(x_gan, y_gan)
                     g_hist.append(g_loss)
                     # summarize loss on this batch
-                    print('>RealLoss=%.3f, FakeLoss=%.3f GeneratorLoss=%.3f' % (c1_hist[-1], c2_hist[-1], g_loss))
+                    print('\r>RealLoss=%.3f, FakeLoss=%.3f GeneratorLoss=%.3f' % (c1_hist[-1], c2_hist[-1], g_loss),
+                          'Processed image', j*self.bach_size + batch.shape[0], end='', flush=True)
             # evaluate the model performance every 'epoch'
+            print()
             self.summarize_performance(self.epoch)
         # line plots of loss
         self.plot_history(c1_hist, c2_hist, g_hist)
