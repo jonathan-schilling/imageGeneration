@@ -4,7 +4,7 @@ import os
 import pathlib
 from WGAN import WGAN
 
-img_height, img_width = 72, 128
+img_height, img_width = 144, 256
 
 
 def get_dataset(data, batch_size):
@@ -19,10 +19,10 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(1500)
+    train_ds = train_ds.cache().shuffle(15000)
     return train_ds
 
 
-wgan = WGAN(get_dataset("bilderNeuro", 32), (img_height, img_width, 3), 32, 5, load=True)
+wgan = WGAN(get_dataset("bilderNeuro", 32), (img_height, img_width, 3), 32, 5, load=False)
 
-wgan.train(20)
+wgan.train(5000)

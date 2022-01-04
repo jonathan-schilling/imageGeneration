@@ -232,7 +232,7 @@ class WGAN(object):
             # plot raw pixel data
             pyplot.imshow(x[i])
         # save plot to file
-        filename1 = 'generated_plot_%04d.pdf' % step
+        filename1 = 'generated_plot_%04d.jpg' % step
         pyplot.savefig(path.join(self.path, "samples", filename1))
         pyplot.close()
 
@@ -295,7 +295,7 @@ class WGAN(object):
                     c1_hist.append(mean(c1_tmp))
                     c2_hist.append(mean(c2_tmp))
                     # prepare points in latent space as input for the generator
-                    x_gan = self.generate_latent_points(batch.shape[0])
+                    x_gan = self.generate_latent_points(self.bach_size)
                     # create inverted labels for the fake samples
                     y_gan = -ones((self.bach_size, 1))
                     # update the generator via the critic's error
