@@ -18,8 +18,8 @@ np.random.seed(1)
 
 # Parameters #
 
-img_height = 72
-img_width = 128
+img_height = 144
+img_width = 256
 image_size = (img_height, img_width, 3)
 z_size = 128
 

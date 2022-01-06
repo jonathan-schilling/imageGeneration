@@ -130,10 +130,11 @@ def call_api(num_of_photos, tag_whitelist, tag_blacklist=None, output_dir="outpu
             issue_text = "photo has the wrong size"
             continue
         try:
-            for tag in photo.get("tags").split(" "):
-                if tag in tag_blacklist:
-                    issue_text = "photo is on the blacklist"
-                    raise Continue
+            if tag_blacklist:
+                for tag in photo.get("tags").split(" "):
+                    if tag in tag_blacklist:
+                        issue_text = "photo is on the blacklist"
+                        raise Continue
         except Continue:
             continue
 

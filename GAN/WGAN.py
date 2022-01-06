@@ -225,6 +225,7 @@ class WGAN(object):
         x, _ = self.generate_fake_samples(n_samples)
         # scale from [-1,1] to [0,1]
         x = (x + 1) / 2.0
+        print(x.shape)
         # plot images
         figure = pyplot.figure(figsize=(26, 26))
         for i in range(10 * 10):
