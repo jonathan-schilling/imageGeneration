@@ -20,13 +20,13 @@ np.random.seed(1)
 
 img_height = 72
 img_width = 128
-image_size = (72, 128, 3)
+image_size = (img_height, img_width, 3)
 z_size = 128
 
 
 # Generator #
 
-def make_dcgan_generator(output_size=(72, 128, 3)):
+def make_dcgan_generator(output_size):
     n_filters = 512
     hidden_size = (output_size[0] // 8, output_size[1] // 8)
 
@@ -71,7 +71,7 @@ def make_dcgan_generator(output_size=(72, 128, 3)):
 
 # Discriminator #
 
-def make_dcgan_discriminator(dropout_rate, input_size=(72, 128, 3)):
+def make_dcgan_discriminator(dropout_rate, input_size):
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=input_size),
 
@@ -140,7 +140,7 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(60)
+    train_ds = train_ds.cache().shuffle(15000)
     return train_ds
 
 def display_examples(samples, number_of_images, output_image, info_text):
@@ -171,7 +171,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     print(device_name)
 
     # Create Generator #
-    gen_model = make_dcgan_generator()
+    gen_model = make_dcgan_generator(output_size=image_size)
     print("###################################")
     print("Using Generator-Model:")
     gen_model.summary()
@@ -186,7 +186,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
         gen_model.load_weights(tf.train.latest_checkpoint(gen_checkpoint_dir))
 
     # Create Discriminator #
-    disc_model = make_dcgan_discriminator(dropout)
+    disc_model = make_dcgan_discriminator(dropout, input_size=image_size)
     print("###################################")
     print("Using Discriminator-Model:")
     disc_model.summary()
