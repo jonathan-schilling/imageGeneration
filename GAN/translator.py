@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as keras
+import numpy as np
 
 def flatten(l):
     r = []
@@ -204,6 +205,30 @@ class ResBlock(tf.keras.Model):
     def get_adain_layers(self):
         return [b.get_adain_layers() for b in self.adain_blocks]
 
+class ActFirstResBlock(tf.keras.Model):
+    def __init__(self, fin, fout, fhid=None, activation='lrelu', norm='none'):
+        super(ActFirstResBlock, self).__init__()
+        self.learned_shortcut = (fin != fout)
+        self.fin = fin
+        self.fout = fout
+        self.fhid = min(fin, fout) if fhid is None else fhid
+        self.conv_0 = Conv2dBlock(self.fhid, 3, 1,
+                                  padding=1, pad_type='reflect', norm=norm,
+                                  activation=activation, activation_first=True)
+        self.conv_1 = Conv2dBlock(self.fout, 3, 1,
+                                  padding=1, pad_type='reflect', norm=norm,
+                                  activation=activation, activation_first=True)
+        if self.learned_shortcut:
+            self.conv_s = Conv2dBlock(self.fout, 1, 1,
+                                      activation='none', use_bias=False)
+
+    def call(self, x):
+        x_s = self.conv_s(x) if self.learned_shortcut else x
+        dx = self.conv_0(x)
+        dx = self.conv_1(dx)
+        out = x_s + dx
+        return out
+
 class LinearBlock(tf.keras.Model):
     def __init__(self, out_dim, norm='none', activation = 'relu'):
         super(LinearBlock, self).__init__()
@@ -262,7 +287,7 @@ class ClassModelEncoder(tf.keras.Model):
                                        norm=norm,
                                        activation=activ,
                                        pad_type=pad_type)]
-        self.model += [tf.keras.layers.GlobalAveragePooling2D()] # = nn.AdaptiveAvgPool2d(1)?
+        self.model += [tf.keras.layers.AveragePooling2D(pool_size=(1,1))] # = nn.AdaptiveAvgPool2d(1)?
         self.model += [tf.keras.layers.Conv2D(latent_dim, 1, strides=(1,1))]
         self.model = tf.keras.Sequential(self.model)
         self.output_dim = dim
@@ -362,3 +387,63 @@ class FewShotGen(tf.keras.Model):
         assign_adain_params(adain_params, self.dec, self.adain_names)
         images = self.dec(content)
         return images
+
+class GPPatchMcResDis(tf.keras.Model):
+    def __init__(self, hp):
+        super(GPPatchMcResDis, self).__init__()
+        assert hp['n_res_blks'] % 2 == 0, 'n_res_blk must be multiples of 2'
+        self.n_layers = hp['n_res_blks'] // 2
+        nf = hp['nf']
+        cnn_f = [Conv2dBlock(nf, 7, 1, 3,
+                             pad_type='reflect',
+                             norm='none',
+                             activation='none')]
+        for i in range(self.n_layers - 1):
+            nf_out = np.min([nf * 2, 1024])
+            cnn_f += [ActFirstResBlock(nf, nf, None, 'lrelu', 'none')]
+            cnn_f += [ActFirstResBlock(nf, nf_out, None, 'lrelu', 'none')]
+            cnn_f += [ReflectionPadding2D(padding=(1,1))]
+            cnn_f += [tf.keras.layers.AveragePooling2D(pool_size=(3,3), strides=(2,2))] # nn.AvgPool2d(kernel_size=3, stride=2) ?
+            nf = np.min([nf * 2, 1024])
+        nf_out = np.min([nf * 2, 1024])
+        cnn_f += [ActFirstResBlock(nf, nf, None, 'lrelu', 'none')]
+        cnn_f += [ActFirstResBlock(nf, nf_out, None, 'lrelu', 'none')]
+        cnn_c = [Conv2dBlock(hp['num_classes'], 1, 1,
+                             norm='none',
+                             activation='lrelu',
+                             activation_first=True)]
+        self.cnn_f = tf.keras.Sequential(cnn_f)
+        self.cnn_c = tf.keras.Sequential(cnn_c)
+
+    def call(self, x, y):
+        assert(x.size(0) == y.size(0))
+        feat = self.cnn_f(x)
+        out = self.cnn_c(feat)
+        # index = torch.LongTensor(range(out.size(0))).cuda()
+        # out = out[index, y, :, :]
+        out = out[:, y, :, :]
+        return out, feat
+
+    def calc_dis_fake_loss(self, input_fake, input_label):
+        resp_fake, gan_feat = self.forward(input_fake, input_label)
+        total_count = np.prod(resp_fake.size())
+        fake_loss = tf.keras.layers.ReLU()(1.0 + resp_fake).mean()
+        correct_count = (resp_fake < 0).sum()
+        fake_accuracy = correct_count.type_as(fake_loss) / total_count
+        return fake_loss, fake_accuracy, resp_fake
+
+    def calc_dis_real_loss(self, input_real, input_label):
+        resp_real, gan_feat = self.forward(input_real, input_label)
+        total_count = np.prod(resp_real.size())
+        real_loss = tf.keras.layers.ReLU()(1.0 - resp_real).mean()
+        correct_count = (resp_real >= 0).sum()
+        real_accuracy = correct_count.type_as(real_loss) / total_count
+        return real_loss, real_accuracy, resp_real
+
+    def calc_gen_loss(self, input_fake, input_fake_label):
+        resp_fake, gan_feat = self.forward(input_fake, input_fake_label)
+        total_count = np.prod(resp_fake.size())
+        loss = -resp_fake.mean()
+        correct_count = (resp_fake >= 0).sum()
+        accuracy = correct_count.type_as(loss) / total_count
+        return loss, accuracy, gan_feat
