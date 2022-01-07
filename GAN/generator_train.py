@@ -1,10 +1,8 @@
 import tensorflow as tf
 import numpy as np
 import os
-import PIL
-import PIL.Image
+from time import time, strftime, gmtime
 import pathlib
-import matplotlib
 import shutil
 from generator_output import plot_image, create_samples
 
@@ -140,8 +138,9 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(15000)
+    train_ds = train_ds.cache().shuffle(10000)
     return train_ds
+
 
 def display_examples(samples, number_of_images, output_image, info_text):
     figure = plt.figure(figsize=(20, 10))
@@ -155,11 +154,11 @@ def display_examples(samples, number_of_images, output_image, info_text):
     figure.savefig(output_image + ".pdf")
     plt.close(figure)
 
+
 def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
                  learning_rate_gen, output_image, continue_):
-
     if not continue_ and os.path.exists(checkpoints):
-      shutil.rmtree(checkpoints)
+        shutil.rmtree(checkpoints)
 
     # Check GPU #
     if len(tf.config.list_physical_devices('GPU')) != 0:
@@ -191,12 +190,12 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     print("Using Discriminator-Model:")
     disc_model.summary()
 
-    disc_checkpoint_path = checkpoints  + "/discriminator/" + "/{epoch:04d}.ckpt"
+    disc_checkpoint_path = checkpoints + "/discriminator/" + "/{epoch:04d}.ckpt"
     disc_checkpoint_dir = os.path.dirname(disc_checkpoint_path)
 
     if not continue_:
         disc_model.save(disc_checkpoint_dir + "/disc-model")
-    
+
     if continue_:
         disc_model.load_weights(tf.train.latest_checkpoint(disc_checkpoint_dir))
 
@@ -230,20 +229,23 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
             g_grads = g_tape.gradient(g_loss, gen_model.trainable_variables)
             g_optimizer.apply_gradients(grads_and_vars=zip(g_grads, gen_model.trainable_variables))
 
-            with tf.GradientTape() as d_tape:
+            with tf.GradientTape() as d_tape1:
                 d_logits_real = disc_model(input_real, training=True)
                 d_labels_real = tf.ones_like(d_logits_real)
                 d_loss_real = loss_fn(y_true=d_labels_real, y_pred=d_logits_real)
 
+            d_grads1 = d_tape1.gradient(d_loss_real, disc_model.trainable_variables)
+            d_optimizer.apply_gradients(grads_and_vars=zip(d_grads1, disc_model.trainable_variables))
+
+            with tf.GradientTape() as d_tape2:
                 d_logits_fake = disc_model(g_output, training=True)
                 d_labels_fake = tf.zeros_like(d_logits_fake)
                 d_loss_fake = loss_fn(y_true=d_labels_fake, y_pred=d_logits_fake)
 
-                d_loss = d_loss_real + d_loss_fake
+                d_loss = d_loss_fake + d_loss_real
 
-            if d_loss > 0.001:  # To fix loss of dicriminator getting too low
-                d_grads = d_tape.gradient(d_loss, disc_model.trainable_variables)
-                d_optimizer.apply_gradients(grads_and_vars=zip(d_grads, disc_model.trainable_variables))
+            d_grads2 = d_tape2.gradient(d_loss_fake, disc_model.trainable_variables)
+            d_optimizer.apply_gradients(grads_and_vars=zip(d_grads2, disc_model.trainable_variables))
 
             epoch_losses.append(
                 (g_loss.numpy(), d_loss.numpy(), d_loss_real.numpy(), d_loss_fake.numpy())
@@ -254,16 +256,16 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
             epoch_d_vals.append((d_probs_real.numpy(), d_probs_fake.numpy()))
 
-        info_text = 'Epoch {:03d} | ET {:.2f} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
-                epoch, (time.time() - start_time) / 60, *list(np.mean(epoch_losses, axis=0))
-            )
+        info_text = 'Epoch {:03d} | ET {} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
+            epoch, strftime('%H:%M:%S', gmtime(time.time() - start_time)), *list(np.mean(epoch_losses, axis=0))
+        )
 
         print(info_text)
-        
+
         number_of_preview_images = 3
         fixed_z = tf.random.uniform(shape=(number_of_preview_images, z_size), minval=-1, maxval=1)
         samples = create_samples(gen_model, fixed_z, number_of_preview_images).numpy()
-        display_examples(samples, number_of_preview_images, output_image, info_text) 
+        display_examples(samples, number_of_preview_images, output_image, info_text)
 
         ## Save model state ##
         if epoch % checkpoint_frequency == 0:
@@ -291,7 +293,8 @@ if __name__ == '__main__':
                         help="The learning rate for the generator to use. Default 1e-3")
     parser.add_argument('-o', '--output', type=str, dest="output", default="live",
                         help="The name of the file to use for the live-image")
-    parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False, help="Continue training (default: Start from the beginning)")
+    parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False,
+                        help="Continue training (default: Start from the beginning)")
 
     args = parser.parse_args()
     train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRateDisc,
