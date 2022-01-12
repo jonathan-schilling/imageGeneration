@@ -20,6 +20,7 @@ class AdaptiveInstanceNorm2d(tf.keras.layers.Layer):
         self.bias = None
         self.batch_norm = tf.keras.layers.BatchNormalization(momentum=self.momentum, epsilon=self.eps)
 
+    @staticmethod
     def get_mean_std(x, epsilon=1e-5): # From https://keras.io/examples/generative/adain/
         axes = [1, 2]
 
@@ -29,7 +30,7 @@ class AdaptiveInstanceNorm2d(tf.keras.layers.Layer):
         return mean, standard_deviation
     
     def ada_in(self, x):
-        x_mean, x_std = get_mean_std(x)
+        x_mean, x_std = self.get_mean_std(x)
         return self.weight * ((x - x_mean) / x_std) + self.bias
 
     def call(self, x):
@@ -253,7 +254,7 @@ class ContentEncoder(tf.keras.Model):
                                    activation=activ,
                                    pad_type=pad_type)]
         for i in range(downs):
-            self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1,
+            self.model += [Conv2dBlock(2 * dim, 4, 2, 1,
                                        norm=norm,
                                        activation=activ,
                                        pad_type=pad_type)]
@@ -268,26 +269,26 @@ class ContentEncoder(tf.keras.Model):
     def call(self, x):
         return self.model(x)
 
-class ClassModelEncoder(tf.keras.Model):
+class ClassStyleEncoder(tf.keras.Model):
     def __init__(self, downs, ind_im, dim, latent_dim, norm, activ, pad_type):
-        super(ClassModelEncoder, self).__init__()
+        super(ClassStyleEncoder, self).__init__()
         self.model = []
-        self.model += [Conv2dBlock(ind_im, dim, 7, 1, 3,
+        self.model += [Conv2dBlock(dim, 7, 1, 3,
                                    norm=norm,
                                    activation=activ,
                                    pad_type=pad_type)]
         for i in range(2):
-            self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1,
+            self.model += [Conv2dBlock(2 * dim, 4, 2, 1,
                                        norm=norm,
                                        activation=activ,
                                        pad_type=pad_type)]
             dim *= 2
         for i in range(downs - 2):
-            self.model += [Conv2dBlock(dim, dim, 4, 2, 1,
+            self.model += [Conv2dBlock(dim, 4, 2, 1,
                                        norm=norm,
                                        activation=activ,
                                        pad_type=pad_type)]
-        self.model += [tf.keras.layers.AveragePooling2D(pool_size=(1,1))] # = nn.AdaptiveAvgPool2d(1)?
+        self.model += [tf.keras.layers.GlobalAveragePooling2D(keepdims=True)] # = nn.AdaptiveAvgPool2d(1)?
         self.model += [tf.keras.layers.Conv2D(latent_dim, 1, strides=(1,1))]
         self.model = tf.keras.Sequential(self.model)
         self.output_dim = dim
@@ -309,12 +310,12 @@ class Decoder(tf.keras.Model):
 
         for i in range(ups):
             self.model += [tf.keras.layers.UpSampling2D(),
-                           Conv2dBlock(dim, dim // 2, 5, 1, 2,
+                           Conv2dBlock(dim // 2, 5, 1, 2,
                                        norm = 'in',
                                        activation = activ,
                                        pad_type = pad_type)]
             dim //= 2
-        self.model += [Conv2dBlock(dim, out_dim, 7, 1, 3,
+        self.model += [Conv2dBlock(out_dim, 7, 1, 3,
                                    norm='none',
                                    activation='tanh',
                                    pad_type=pad_type)]
@@ -337,15 +338,15 @@ class MLP(tf.keras.Model):
         self.model = tf.keras.Sequential(self.model)
 
     def call(self, x):
-        return self.model(x.view(x.size(0), -1))
+        return self.model(tf.reshape(x, [1, -1]))
 
 def assign_adain_params(adain_params, model, adain_names):
     for l in model.get_adain_layers():
         mean = adain_params[:, :l.num_features]
         std = adain_params[:, l.num_features:2*l.num_features]
-        m.bias = tf.reshape(mean, [-1])
-        m.weight = tf.reshape(std, [-1])
-        if adain_params.size(1) > 2*l.num_features:
+        l.bias = tf.reshape(mean, [-1])
+        l.weight = tf.reshape(std, [-1])
+        if tf.shape(adain_params).numpy()[1] > 2*l.num_features:
             adain_params = adain_params[:, 2*l.num_features:]
 
 def get_num_adain_params(model, adain_names):
@@ -365,28 +366,33 @@ class FewShotGen(tf.keras.Model):
         n_res_blks = hp['n_res_blks']
         self.adain_names = ["adain" + str(x) for x in range(n_res_blks)]
         latent_dim = hp['latent_dim']
-        self.enc_class_model = ClassModelEncoder(down_class, 3, nf, latent_dim, norm='none', activ='relu', pad_type='reflect')
+        self.enc_class_style = ClassStyleEncoder(down_class, 3, nf, latent_dim, norm='none', activ='relu', pad_type='reflect')
         self.enc_content = ContentEncoder(down_content, n_res_blks, nf, norm='in', activ='relu', pad_type='reflect')
         self.dec = Decoder(down_content, n_res_blks, self.enc_content.output_dim, 3, res_norm='adain', activ='relu', pad_type='reflect', adain_names=self.adain_names)
         self.mlp = MLP(get_num_adain_params(self.dec, self.adain_names), nf_mlp, n_mlp_blks, norm='none', activ='relu')
     
     def call(self, content_image, style_set):
-        content, model_codes = self.encode(content_image, style_set)
-        model_code = tf.math.reduce_mean(model_codes, axis=0) # torch.mean(model_codes, dim=0).unsqueeze(0)
-        images_trans = self.decode(content, model_code)
+        content, style_code = self.encode(content_image, style_set)
+        images_trans = self.decode(content, style_code)
         return images_trans
 
     def encode(self, content_image, style_set):
-        content = self.enc_content(content_image)
-        class_codes = self.enc_class_model(style_set)
-        class_code = tf.math.reduce_mean(class_codes, axis=0) # torch.mean(model_codes, dim=0).unsqueeze(0)
+        content = self.enc_content([content_image]) # [] because Keras expects a sample dimension
+        class_codes = self.enc_class_style(style_set)
+        class_code = tf.squeeze(tf.math.reduce_mean(class_codes, axis=0)) # torch.mean(model_codes, dim=0).unsqueeze(0)
         return content, class_code
 
-    def decode(self, content, model_code):
-        adain_params = self.mlp(model_code)
+    def decode(self, content, style_code):
+        adain_params = self.mlp(style_code)
         assign_adain_params(adain_params, self.dec, self.adain_names)
         images = self.dec(content)
         return images
+
+    def summary(self, expand_nested=True):
+        self.enc_class_style.summary(expand_nested=expand_nested)
+        self.enc_content.summary(expand_nested=expand_nested)
+        self.dec.summary(expand_nested=expand_nested)
+        self.mlp.summary(expand_nested=expand_nested)
 
 class GPPatchMcResDis(tf.keras.Model):
     def __init__(self, hp):
