@@ -17,7 +17,7 @@ import ntpath
 
 img_height = 144
 img_width = 256
-image_size = (img_width, img_height, 3)
+image_size = (img_height, img_width, 3)
 z_size = 128
 
 def create_samples(g_model, input_z, batch_size):
