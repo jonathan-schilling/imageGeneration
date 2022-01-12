@@ -422,12 +422,12 @@ class GPPatchMcResDis(tf.keras.Model):
         self.cnn_c = tf.keras.Sequential(cnn_c)
 
     def call(self, x, y):
-        assert(x.size(0) == y.size(0))
+        assert(x.shape[0] == y.shape[0])
         feat = self.cnn_f(x)
         out = self.cnn_c(feat)
         # index = torch.LongTensor(range(out.size(0))).cuda()
         # out = out[index, y, :, :]
-        out = out[:, y, :, :]
+        out = tf.gather(out, y, axis=3) # out[:, y, :, :]
         return out, feat
 
     def calc_dis_fake_loss(self, input_fake, input_label):
