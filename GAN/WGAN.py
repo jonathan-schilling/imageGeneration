@@ -21,6 +21,7 @@ from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.constraints import Constraint
 from matplotlib import pyplot
+import pickle
 
 
 # clip model weights to a given hypercube
@@ -171,6 +172,8 @@ class WGAN(object):
         self.critic_learn_iterations = critic_learn_iterations
         self.latent_dim = 128
 
+        self.loss_hist: dict = dict()
+
         if load:
             g_models = os.listdir(path.join(path_like, "g_models"))
             c_models = os.listdir(path.join(path_like, "c_models"))
@@ -181,6 +184,10 @@ class WGAN(object):
             self.critic_model = load_model(path.join(path_like, "c_models", c_models[-1]),
                                            custom_objects={"ClipConstraint": ClipConstraint,
                                                            "wasserstein_loss": wasserstein_loss})
+            with open(path.join(self.path, "stats.pickle"), 'rb') as f:
+                self.loss_hist = pickle.load(f)
+                if not isinstance(self.loss_hist, dict):
+                    self.loss_hist = {}
         else:
             self.epoch = 0
             self.generator_model = define_generator(self.latent_dim, image_size)
@@ -220,12 +227,12 @@ class WGAN(object):
         return x, y
 
     # generate samples and save as a plot and save the model
-    def summarize_performance(self, step, n_samples=100):
+    def summarize_performance(self, step, hist_dict, n_samples=100):
         # prepare fake examples
         x, _ = self.generate_fake_samples(n_samples)
         # scale from [-1,1] to [0,1]
-        x = (x + 1) / 2.0
-        print(x.shape)
+        # x = (x + 1) / 2.0
+        # print(x.shape)
         # plot images
         figure = pyplot.figure(figsize=(26, 26))
         for i in range(10 * 10):
@@ -235,12 +242,15 @@ class WGAN(object):
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
             # plot raw pixel data
-            ax.imshow(x[i])
+            plot_image(ax, x[i])
 
         # save plot to file
         filename1 = 'generated_plot_%04d.jpg' % step
         pyplot.savefig(path.join(self.path, "samples", filename1))
         pyplot.close()
+
+        with open(path.join(self.path, "stats.pickle"), 'wb') as f:
+            pickle.dump(hist_dict, f)
 
         # remove previous model if it is not in the save interval
         if (step - 1) % self.save_interval != 0:
@@ -271,7 +281,10 @@ class WGAN(object):
         # calculate the size of half a batch of samples
         critic_learn_count = 0
         # lists for keeping track of loss
-        c1_hist, c2_hist, g_hist = list(), list(), list()
+        self.loss_hist: dict
+        c1_hist = self.loss_hist.setdefault('c1_hist', list())
+        c2_hist = self.loss_hist.setdefault('c2_hist', list())
+        g_hist = self.loss_hist.setdefault('g_hist', list())
         # set start time
         start_time = time()
         epochs = epochs - self.epoch
@@ -310,7 +323,7 @@ class WGAN(object):
                           'Processed image', j*self.bach_size + batch.shape[0], end='', flush=True)
             # evaluate the model performance every 'epoch'
             print()
-            self.summarize_performance(self.epoch)
+            self.summarize_performance(self.epoch, {'c1_hist': c1_hist, 'c2_hist': c2_hist, 'g_hist': g_hist})
         # line plots of loss
         self.plot_history(c1_hist, c2_hist, g_hist)
 

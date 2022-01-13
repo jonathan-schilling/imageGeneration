@@ -1,3 +1,5 @@
+import argparse
+
 import tensorflow as tf
 import numpy as np
 import os
@@ -19,10 +21,25 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(15000)
+    train_ds = train_ds.cache().shuffle(10000)
     return train_ds
 
 
-wgan = WGAN(get_dataset("bilderNeuro", 32), (img_height, img_width, 3), 32, 5, load=True)
+if __name__ == '__main__':
+    # Parse Arguments #
+    parser = argparse.ArgumentParser(description='Train Wasserstein GAN to generate landscapes')
+    parser.add_argument('bSize', type=int, help='Batch Size to use')
+    parser.add_argument('epochs', type=int, help='Number of epochs to train')
+    parser.add_argument('-d', '--directory', type=str, dest="path", default="training",
+                        help="The output directory where the checkpoints are saved. It will be created if it dosen't "
+                             "exist and overritten (!) if it does.")
+    parser.add_argument('-c', '--checkpoints', type=int, dest="chps", default=5,
+                        help='Take checkpoint every x epochs. Default = 5')
+    parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False,
+                        help="Continue training (default: Start from the beginning)")
 
-wgan.train(5000)
+    args = parser.parse_args()
+
+    wgan = WGAN(get_dataset("bilderNeuro", args.bSize), (img_height, img_width, 3), args.bSize, 5, path_like=args.path,
+                load=args.continue_, save_interval=args.chps)
+    wgan.train(args.epochs)
