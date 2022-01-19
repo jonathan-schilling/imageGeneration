@@ -231,8 +231,7 @@ class WGAN(object):
         # prepare fake examples
         x, _ = self.generate_fake_samples(n_samples)
         # scale from [-1,1] to [0,1]
-        # x = (x + 1) / 2.0
-        # print(x.shape)
+        x = (x + 1) / 2.0
         # plot images
         figure = pyplot.figure(figsize=(26, 26))
         for i in range(10 * 10):
@@ -285,6 +284,7 @@ class WGAN(object):
         c1_hist = self.loss_hist.setdefault('c1_hist', list())
         c2_hist = self.loss_hist.setdefault('c2_hist', list())
         g_hist = self.loss_hist.setdefault('g_hist', list())
+        c1_tmp, c2_tmp = list(), list()
         # set start time
         start_time = time()
         epochs = epochs - self.epoch
@@ -293,10 +293,8 @@ class WGAN(object):
             self.epoch += 1
             current_time = time() - start_time
             print("####### Epoch", self.epoch, f"Time: {strftime('%H:%M:%S', gmtime(current_time))} #######")
+            # update the critic more than the generator
             for j, (batch, _) in enumerate(self.dataset):
-                # update the critic more than the generator
-                c1_tmp, c2_tmp = list(), list()
-
                 # update critic model weights
                 c_loss1 = self.critic_model.train_on_batch(batch, -ones((batch.shape[0], 1)))
                 c1_tmp.append(c_loss1)
@@ -311,6 +309,7 @@ class WGAN(object):
                     # store critic loss
                     c1_hist.append(mean(c1_tmp))
                     c2_hist.append(mean(c2_tmp))
+                    c1_tmp, c2_tmp = list(), list()
                     # prepare points in latent space as input for the generator
                     x_gan = self.generate_latent_points(self.bach_size)
                     # create inverted labels for the fake samples

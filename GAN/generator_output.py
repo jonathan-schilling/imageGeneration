@@ -48,6 +48,7 @@ def output_results(batch_size, checkpoints, epochs, every, output_image, start_e
 
     n = 0
     for i,checkpoint in enumerate(chps):
+        print(f"\r Load Checkpoint {i}", end="", flush=True)
         if i % every == 0 and batches_existing[n] >= start_epoch:
             gen_model.load_weights(gen_checkpoint_dir + "/" + Path(checkpoint).stem)
             epoch_samples.append(create_samples(gen_model, fixed_z, batch_size).numpy())
