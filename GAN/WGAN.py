@@ -293,8 +293,7 @@ class WGAN(object):
             self.epoch += 1
             current_time = time() - start_time
             print("####### Epoch", self.epoch, f"Time: {strftime('%H:%M:%S', gmtime(current_time))} #######")
-            # update the critic more than the generator
-            for j, (batch, _) in enumerate(self.dataset):
+            for j, batch in enumerate(self.dataset):
                 # update critic model weights
                 c_loss1 = self.critic_model.train_on_batch(batch, -ones((batch.shape[0], 1)))
                 c1_tmp.append(c_loss1)

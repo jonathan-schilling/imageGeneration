@@ -15,13 +15,16 @@ def get_dataset(data, batch_size):
     train_ds = tf.keras.utils.image_dataset_from_directory(
         data_dir,
         seed=123,
+        labels=None,
+        label_mode=None,
         image_size=(img_height, img_width),
         batch_size=batch_size,
+        follow_links=True,
         crop_to_aspect_ratio=True)
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
-    train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(10000)
+    train_ds = train_ds.map(lambda x: (normalization_layer(x)))
+    train_ds = train_ds.cache().shuffle(1000).prefetch(AUTOTUNE)
     return train_ds
 
 
