@@ -4,6 +4,9 @@ import os
 from time import time, strftime, gmtime
 import pathlib
 import shutil
+
+from tensorflow.python.data import AUTOTUNE
+
 import csv
 from generator_output import plot_image, create_samples
 
@@ -139,7 +142,7 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(10000)
+    train_ds = train_ds.cache().shuffle(10000).prefetch(AUTOTUNE)
     return train_ds
 
 
