@@ -1,16 +1,42 @@
 import argparse
 import yaml
 
-from trainer import Trainer
+import tensorflow as tf
 
+import matplotlib
+
+
+from trainer import Trainer
+from data_loader import Loader
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
+def plot_image(ax, image):
+    image = de_normalization_layer(image)
+    ax.imshow(image)
 
 def main():
     config = get_config("../config.yaml")
     prepare_config(config)
 
+    # for data_content, data_class in loader:
+    #     print(data_content)
+    #     fig, axes = plt.subplots(figsize=(5*2, 20), nrows=len(data_content[0]), ncols=2, sharex=True, sharey=True)
+    #     for i in range(len(data_content[0])):
+    #         for j in range(2):
+    #             ax = axes[i,j]
+    #             image = data_content[0][j]
+    #             ax.get_xaxis().set_visible(False)
+    #             ax.get_yaxis().set_visible(False)
+    #             plot_image(ax, image)
+    #     break
+    # fig.savefig("test.pdf")
 
-    #trainer = Trainer(config)
-    #trainer.train()
+
+    trainer = Trainer(config)
+    trainer.train(10)
 
 
 def get_config(config_file):

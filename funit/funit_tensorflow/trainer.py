@@ -2,9 +2,8 @@ import tensorflow as tf
 from tensorflow.keras.optimizers import RMSprop
 import time
 
-from funit.funit_tensorflow.data_loader import Loader
+from data_loader import Loader
 from translator import GPPatchMcResDis, FewShotGen
-
 
 # TODO: in config lr_gen, lr_dis, gan_w, r_w, fm_w, gen, dis
 
@@ -33,22 +32,22 @@ class Trainer:
                 gen_l_total, gen_acc = self.gen_update(co_data, cl_data, self.config)
 
                 self.print_info_text(epoch, start_time, gen_l_total, dis_l_total, gen_acc, dis_acc)
+            test_data = loader.get_test_data()
+            translated_image = self.generator.call(test_data[0][0], test_data[1][0])
+            self.summarise(test_data[0][0], test_data[1][0], translated_image, self.config['output_file'], epoch)    
 
     def dis_update(self, co_data, cl_data, config):
         xa = co_data[0]
         la = co_data[1]
         xb = cl_data[0]
         lb = cl_data[1]
-        # xb.requires_grad_()  # TODO change to new training (Begins to watch changes to this tensor)
         with tf.GradientTape() as tape:
             l_real_pre, acc_r, resp_r = self.discriminator.calc_dis_real_loss(xb, lb)
             l_real = config['gan_w'] * l_real_pre
-            #l_real.backward(retain_graph=True)  # TODO change to new training
             l_reg_pre = self.discriminator.calc_grad2(resp_r, xb)
             l_reg = 10 * l_reg_pre
-            #l_reg.backward()  # TODO change to new training
             xt = self.generator(xa, xb)
-            l_fake_p, acc_f, resp_f = self.discriminator.calc_dis_fake_loss(xt, lb) # TODO change to new training (detatches Tensor from current graph)
+            l_fake_p, acc_f, resp_f = self.discriminator.calc_dis_fake_loss(xt, lb)
             l_fake = config['gan_w'] * l_fake_p
             l_total = l_fake + l_real + l_reg
             acc = 0.5 * (acc_f + acc_r)
@@ -83,6 +82,31 @@ class Trainer:
         self.gen_opt.apply_gradients(zip(gradients, self.generator.trainable_variables))
         return l_total, acc
 
+
+    def summarise(content_image, class_images, output_image, output_file, epoch_number):
+        def plot_image(ax, image):
+            image = de_normalization_layer(image)
+            ax.imshow(image)
+
+        def get_axis(axes, x, y):
+            ax = axes[x,y]
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            return ax
+
+        de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
+    
+        fig, axes = plt.subplots(figsize=(5*2, 20), nrows=3, ncols=len(class_images), sharex=True, sharey=True)
+        ax = get_axis(axes, 1,len(class_images)//2)
+        plot_image(ax, content_image)
+        for j in range(len(class_images)):
+           ax = get_axis(axes, 2, j)
+           image = class_images[0]
+           plot_image(ax, image)
+        ax = get_axis(axes, 1,len(class_images)//2)
+        plot_image(ax, output_image)
+        fig.suptitle(f"Batch: {epoch_number}", size='xx-large')
+        fig.savefig(output_file + ".pdf")
 
     def print_info_text(self, epoch, start_time, gen_l_total, dis_l_total, gen_acc, dis_acc):
         print('Epoch {:03d} | ET {:.2f} min | total Losses G/D {:.4f}/{:.4f}| accuracy G/D {:.4f}/{:.4f}'.format(

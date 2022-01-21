@@ -472,10 +472,10 @@ class GPPatchMcResDis(tf.keras.Model):
 
     def calc_dis_real_loss(self, input_real, input_label):
         resp_real, gan_feat = self.call(input_real, input_label)
-        total_count = np.prod(resp_real.size())
-        real_loss = tf.keras.layers.ReLU()(1.0 - resp_real).mean()
-        correct_count = (resp_real >= 0).sum()
-        real_accuracy = correct_count.type_as(real_loss) / total_count
+        total_count = np.prod(tf.size(resp_real)) # np.prod(resp_real.size())
+        real_loss = tf.math.reduce_mean(tf.keras.layers.ReLU()(1.0 - resp_real))
+        correct_count = tf.math.reduce_sum(tf.boolean_mask(resp_real, tf.greater_equal(resp_real, tf.zeros_like(resp_real))))
+        real_accuracy = correct_count / total_count
         return real_loss, real_accuracy, resp_real
 
     def calc_gen_loss(self, input_fake, input_fake_label):
@@ -487,7 +487,7 @@ class GPPatchMcResDis(tf.keras.Model):
         return loss, accuracy, gan_feat
 
     def calc_grad2(self, d_out, x_in):  # TODO change to new training
-        batch_size = x_in.size(0)
+        batch_size = tf.shape(x_in).numpy()[0]
         grad_dout = autograd.grad(outputs=d_out.mean(),
                                   inputs=x_in,
                                   create_graph=True,
