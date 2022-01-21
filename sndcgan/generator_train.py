@@ -285,12 +285,12 @@ if __name__ == '__main__':
                              "exist and overritten (!) if it does.")
     parser.add_argument('-d', '--data', type=str, dest="data", default="bilderNeuro",
                         help="The directory containing subdirectories (labels) with images to use for training.")
-    parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.2,
-                        help="The dropout rate to use for the discriminator")
-    parser.add_argument('-ld', '--learnRateDisc', type=float, dest="learnRateDisc", default=0.0001,
-                        help="The learning rate for the discriminator to use. Default = 1e-4")
-    parser.add_argument('-lg', '--learnRateGen', type=float, dest="learnRateGen", default=0.001,
-                        help="The learning rate for the generator to use. Default 1e-3")
+    parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.5,
+                        help="The dropout rate to use for the discriminator. Default = 0.5")
+    parser.add_argument('-ld', '--learnRateDisc', type=float, dest="learnRateDisc", default=0.0002,
+                        help="The learning rate for the discriminator to use. Default = 2e-4")
+    parser.add_argument('-lg', '--learnRateGen', type=float, dest="learnRateGen", default=0.0002,
+                        help="The learning rate for the generator to use. Default = 2e-4")
     parser.add_argument('-o', '--output', type=str, dest="output", default="live",
                         help="The name of the file to use for the live-image")
     parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False,
