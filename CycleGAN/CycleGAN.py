@@ -196,27 +196,30 @@ class CycleGAN(object):
 
 
     # generate samples and save as a plot and save the model
-    def summarize_performance(self, step, n_samples=100):
-        # prepare fake examples
-        x, _ = self.generate_fake_samples(n_samples)
-        # scale from [-1,1] to [0,1]
-        x = (x + 1) / 2.0
-        # plot images
-        for i in range(10 * 10):
-            # define subplot
-            pyplot.subplot(10, 10, 1 + i)
-            # turn off axis
-            pyplot.axis('off')
-            # plot raw pixel data
-            pyplot.imshow(x[i])
-        # save plot to file
-        filename1 = 'generated_plot_%04d.png' % (step + 1)
-        pyplot.savefig(path.join(self.path, "samples", filename1))
-        pyplot.close()
-        # save the generator model
-        filename2 = 'model_%04d.h5' % (step + 1)
-        self.generator_model.save(path.join(self.path, "models", filename2))
-        print('>Saved: %s and %s' % (filename1, filename2))
+    def summarize_performance(self, content_image, class_images, output_image, output_file, epoch_number):
+        def plot_image(ax, image):
+            image = de_normalization_layer(image)
+            ax.imshow(image)
+
+        def get_axis(axes, x, y):
+            ax = axes[x,y]
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)
+            return ax
+
+        de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
+    
+        fig, axes = plt.subplots(figsize=(5*2, 20), nrows=3, ncols=len(class_images), sharex=True, sharey=True)
+        ax = get_axis(axes, 1,len(class_images)//2)
+        plot_image(ax, content_image)
+        for j in range(len(class_images)):
+           ax = get_axis(axes, 2, j)
+           image = class_images[0]
+           plot_image(ax, image)
+        ax = get_axis(axes, 1,len(class_images)//2)
+        plot_image(ax, output_image)
+        fig.suptitle(f"Batch: {epoch_number}", size='xx-large')
+        fig.savefig(output_file + ".pdf")
 
     # create a line plot of loss for the gan and save to file
     def plot_history(self, d1_hist, d2_hist, g_hist):
@@ -286,7 +289,9 @@ class CycleGAN(object):
             for j, (batch1, batch2) in enumerate(zip(self.dataset1, self.dataset2)):
                 self.train_step(batch1, batch2)
             # evaluate the model performance every 'epoch'
-            self.summarize_performance(i)
+            else: #is executed after for-loop
+                translated_image = self.generator_g(batch1[0], training=False)
+                self.summarize_performance(batch1[0], batch2[0:5], translated_image, self.config['output_file'], epoch)
         # line plots of loss
         self.plot_history(c1_hist, c2_hist, g_hist)
 
