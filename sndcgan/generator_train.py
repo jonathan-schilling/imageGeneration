@@ -4,6 +4,10 @@ import os
 from time import time, strftime, gmtime
 import pathlib
 import shutil
+
+from tensorflow.python.data import AUTOTUNE
+
+import csv
 from generator_output import plot_image, create_samples
 
 import matplotlib.pyplot as plt
@@ -138,7 +142,7 @@ def get_dataset(data, batch_size):
 
     normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
     train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(10000)
+    train_ds = train_ds.cache().shuffle(10000).prefetch(AUTOTUNE)
     return train_ds
 
 
@@ -199,6 +203,18 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     if continue_:
         disc_model.load_weights(tf.train.latest_checkpoint(disc_checkpoint_dir))
 
+    # Log File #
+
+    log_file_path = checkpoints + "/training_log.csv"
+
+    if not continue_:
+        with open(log_file_path, 'w', newline='') as training_log_csv:
+            log_writer = csv.writer(training_log_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            log_writer.writerow(['Epoch', 'Epoch_Done_Timestamp', 'Avg_G_Loss', 'Avg_D_Loss', 'D_Real', 'D_Fake'])
+            training_log_csv.close()
+
+    # Dataset #
+
     train_ds = get_dataset(data, batch_size)
 
     # Training #
@@ -256,9 +272,14 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
             epoch_d_vals.append((d_probs_real.numpy(), d_probs_fake.numpy()))
 
+        epoch_duration = strftime('%H:%M:%S', gmtime(time.time() - start_time))
         info_text = 'Epoch {:03d} | ET {} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
-            epoch, strftime('%H:%M:%S', gmtime(time.time() - start_time)), *list(np.mean(epoch_losses, axis=0))
+            epoch, epoch_duration, *list(np.mean(epoch_losses, axis=0))
         )
+
+        with open(log_file_path, 'a', newline='') as training_log_csv:
+            log_writer = csv.writer(training_log_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            log_writer.writerow([epoch,epoch_duration,*list(np.mean(epoch_losses, axis=0))])
 
         print(info_text)
 
@@ -283,14 +304,14 @@ if __name__ == '__main__':
     parser.add_argument('-cd', '--checkpointDir', type=str, dest="checkpoints", default="training",
                         help="The output directory where the checkpoints are saved. It will be created if it dosen't "
                              "exist and overritten (!) if it does.")
-    parser.add_argument('-d', '--data', type=str, dest="data", default="bilderNeuro",
+    parser.add_argument('-d', '--data', type=str, dest="data", default="dataset",
                         help="The directory containing subdirectories (labels) with images to use for training.")
-    parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.2,
-                        help="The dropout rate to use for the discriminator")
-    parser.add_argument('-ld', '--learnRateDisc', type=float, dest="learnRateDisc", default=0.0001,
-                        help="The learning rate for the discriminator to use. Default = 1e-4")
-    parser.add_argument('-lg', '--learnRateGen', type=float, dest="learnRateGen", default=0.001,
-                        help="The learning rate for the generator to use. Default 1e-3")
+    parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.5,
+                        help="The dropout rate to use for the discriminator. Default = 0.5")
+    parser.add_argument('-ld', '--learnRateDisc', type=float, dest="learnRateDisc", default=0.0002,
+                        help="The learning rate for the discriminator to use. Default = 2e-4")
+    parser.add_argument('-lg', '--learnRateGen', type=float, dest="learnRateGen", default=0.0002,
+                        help="The learning rate for the generator to use. Default = 2e-4")
     parser.add_argument('-o', '--output', type=str, dest="output", default="live",
                         help="The name of the file to use for the live-image")
     parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False,
