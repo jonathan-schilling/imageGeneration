@@ -1,0 +1,28 @@
+Quelle:
+
+Dataset: open_images_v4
+
+  ca. 26.000 Bilder
+ 
+  Filter:
+    format = JPEG
+    mode = RGB
+    aspect_ratio = 1.25 .. 1.5 | 1.5 .. 2.5
+    has_faces = false
+    split = train | test | validation
+    objects_label = landscape
+    
+  Download via Script from https://storage.googleapis.com/openimages/web/download.html#download_using_fiftyone
+  
+  Befehl: python downloader.py <file_with_image_ids> --download_folder=<path> --num_processes=5
+  
+
+Dataset: flickr
+
+  ca. 2000 Bilder
+  
+  Download via API
+
+  
+Qualitätssicherung: Manuelles aussortieren => 10.000 Bilder
+    

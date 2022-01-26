@@ -1,0 +1,10 @@
+quality_good
+quality_medium
+quality_bad
+light_medium
+light_dark
+dust_medium
+dust_bad
+constructions_medium
+constructions_bad
+snow

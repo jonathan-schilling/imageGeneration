@@ -1,0 +1,12 @@
+{
+    "sum_images": 10000,
+    "quality_good": 3087,
+    "quality_medium": 6782,
+    "quality_bad": 131,
+    "sum_usable": 7244,
+    "good_unique": 1882,
+    "good_one_med": 848,
+    "good_two_med": 141,
+    "medium_unique": 1991,
+    "medium_one_med": 2382
+}
