@@ -1,28 +1,26 @@
-import tensorflow as tf
-import numpy as np
-import os
-import pathlib
-from WGAN import WGAN
+import argparse
+from CycleGAN.CycleGAN import CycleGAN
 
 img_height, img_width = 72, 128
 
+if __name__ == '__main__':
+    # Parse Arguments #
+    parser = argparse.ArgumentParser(description='Train CycleGAN to translate between image domains')
+    parser.add_argument('bSize', type=int, help='Batch Size to use')
+    parser.add_argument('epochs', type=int, help='Number of epochs to train')
+    parser.add_argument('-x', '--data1', type=str, dest="dataset1", default="x_data",
+                        help="The directory where the images from domain one can be found.")
+    parser.add_argument('-y', '--data2', type=str, dest="dataset2", default="y_data",
+                        help="The directory where the images from domain two can be found.")
+    parser.add_argument('-d', '--directory', type=str, dest="path", default="training",
+                        help="The output directory where the checkpoints are saved. It will be created if it dosen't "
+                             "exist and overritten (!) if it does.")
+    parser.add_argument('-c', '--checkpoints', type=int, dest="chps", default=5,
+                        help='Take checkpoint every x epochs. Default = 5')
+    parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False,
+                        help="Continue training (default: Start from the beginning)")
 
-def get_dataset(data, batch_size):
-    data_dir = pathlib.Path(data)
+    args = parser.parse_args()
 
-    train_ds = tf.keras.utils.image_dataset_from_directory(
-        data_dir,
-        seed=123,
-        image_size=(img_height, img_width),
-        batch_size=batch_size,
-        crop_to_aspect_ratio=True)
-
-    normalization_layer = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
-    train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    train_ds = train_ds.cache().shuffle(1500)
-    return train_ds
-
-
-wgan = WGAN(get_dataset("bilderNeuro", 32), (img_height, img_width, 3), 32, 5)
-
-wgan.train(10)
+    cycle_gan = CycleGAN(args.dataset1, args.dataset2, args.path, args.bSize, (img_width, img_height))
+    cycle_gan.train(args.epochs)

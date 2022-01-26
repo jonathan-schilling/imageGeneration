@@ -19,7 +19,7 @@ from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.constraints import Constraint
-from matplotlib import pyplot
+from matplotlib import plt
 
 
 # clip model weights to a given hypercube
@@ -208,15 +208,15 @@ class WGAN(object):
         # plot images
         for i in range(10 * 10):
             # define subplot
-            pyplot.subplot(10, 10, 1 + i)
+            plt.subplot(10, 10, 1 + i)
             # turn off axis
-            pyplot.axis('off')
+            plt.axis('off')
             # plot raw pixel data
-            pyplot.imshow(x[i])
+            plt.imshow(x[i])
         # save plot to file
         filename1 = 'generated_plot_%04d.png' % (step + 1)
-        pyplot.savefig(path.join(self.path, "samples", filename1))
-        pyplot.close()
+        plt.savefig(path.join(self.path, "samples", filename1))
+        plt.close()
         # save the generator model
         filename2 = 'model_%04d.h5' % (step + 1)
         self.generator_model.save(path.join(self.path, "models", filename2))
@@ -225,12 +225,12 @@ class WGAN(object):
     # create a line plot of loss for the gan and save to file
     def plot_history(self, d1_hist, d2_hist, g_hist):
         # plot history
-        pyplot.plot(d1_hist, label='crit_real loss')
-        pyplot.plot(d2_hist, label='crit_fake loss')
-        pyplot.plot(g_hist, label='gen loss')
-        pyplot.legend()
-        pyplot.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
-        pyplot.close()
+        plt.plot(d1_hist, label='crit_real loss')
+        plt.plot(d2_hist, label='crit_fake loss')
+        plt.plot(g_hist, label='gen loss')
+        plt.legend()
+        plt.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
+        plt.close()
 
     def train(self, epochs):
         # calculate the size of half a batch of samples

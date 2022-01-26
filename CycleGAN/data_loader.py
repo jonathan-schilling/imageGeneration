@@ -3,20 +3,20 @@ from tensorflow.keras.layers import Rescaling
 from tensorflow.python.data import AUTOTUNE
 
 class Loader:
-
-    def __init__(self, config) -> None:
-        self.config = config
-        self.x_dataset = self.create_dataset(self.config['x_data_dir'])
-        self.y_dataset = self.create_dataset(self.config['y_data_dir'])
-        self.batch_size = self.config['batch_size']
+    def __init__(self, x_data_dir, y_data_dir, image_size, batch_size) -> None:
+        self.image_size = image_size
+        self.batch_size = batch_size
+        self.x_dataset = self.create_dataset(x_data_dir)
+        self.y_dataset = self.create_dataset(y_data_dir)
 
     def create_dataset(self, data_dir):
         dataset = image_dataset_from_directory(
             data_dir,
             seed=123,
-            image_size=(self.config['img_height'],self.config['img_height']),
-            batch_size=self.config['batch_size'],
+            image_size=self.image_size,
+            batch_size=self.batch_size,
             crop_to_aspect_ratio=True,
+            label_mode=None
             )
 
         normalization_layer = Rescaling(1. / 127.5, offset=-1)
@@ -37,6 +37,6 @@ class Loader:
         # Both batches must be exactly batch_size big:
         if (get_batch_size(x_next) != self.batch_size or
                 get_batch_size(y_next) != self.batch_size):
-            return self.__next__()
+            raise StopIteration()
         else:
             return x_next, y_next

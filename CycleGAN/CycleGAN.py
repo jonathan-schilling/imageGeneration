@@ -17,8 +17,11 @@ from tensorflow.keras.layers import Dense, Reshape, Flatten, Conv2D, Conv2DTrans
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.train import Checkpoint, CheckpointManager
-from matplotlib import pyplot
-from tensorflow_addons.layers import InstanceNormalization 
+from tensorflow_addons.layers import InstanceNormalization
+import matplotlib.plt as plt
+
+from CycleGAN.data_loader import Loader
+
 
 class Tanh(tf.keras.layers.Layer):
     def __init__(self):
@@ -153,15 +156,17 @@ def identity_loss(real_image, same_image):
   return LAMBDA * 0.5 * loss
 
 class CycleGAN(object):
-    def __init__(self, dataset1, dataset2, path_like="training"):
+    def __init__(self, dataset1_path, dataset2_path, path_like, batch_size, image_size):
 
         if not path.exists(path_like):
             os.mkdir(path_like)
         checkpoint_path = path.join(path_like, "checkpoints")
         if not path.exists(checkpoint_path):
             os.mkdir(checkpoint_path)
+        self.preview_output = path.join(path_like, "preview")
 
-        self.dataset1, self.dataset2 = dataset1, dataset2
+        self.loader = Loader(dataset1_path, dataset2_path, image_size, batch_size)
+        self.batch_size = batch_size
 
         self.generator_g_optimizer = Adam(2e-4, beta_1=0.5)
         self.generator_f_optimizer = Adam(2e-4, beta_1=0.5)
@@ -174,6 +179,9 @@ class CycleGAN(object):
 
         self.discriminator_x = define_discriminator()
         self.discriminator_y = define_discriminator()
+
+        self.losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [], "total_gen_g_loss": [], "total_gen_f_loss": [],
+                        "total_cycle_loss": []}
         
         ckpt = Checkpoint(
             self.generator_g,
@@ -196,7 +204,7 @@ class CycleGAN(object):
 
 
     # generate samples and save as a plot and save the model
-    def summarize_performance(self, content_image, class_images, output_image, output_file, epoch_number):
+    def summarize_performance(self, input_g, input_f, output_g, output_f, epoch_number):
         def plot_image(ax, image):
             image = de_normalization_layer(image)
             ax.imshow(image)
@@ -208,28 +216,41 @@ class CycleGAN(object):
             return ax
 
         de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
+
+        number_of_cases = len(input_g) + len(input_f)
     
-        fig, axes = plt.subplots(figsize=(5*2, 20), nrows=3, ncols=len(class_images), sharex=True, sharey=True)
-        ax = get_axis(axes, 1,len(class_images)//2)
-        plot_image(ax, content_image)
-        for j in range(len(class_images)):
-           ax = get_axis(axes, 2, j)
-           image = class_images[0]
-           plot_image(ax, image)
-        ax = get_axis(axes, 1,len(class_images)//2)
-        plot_image(ax, output_image)
+        fig, axes = plt.subplots(figsize=(10, 5*number_of_cases), nrows=number_of_cases, ncols=2, sharex=True, sharey=True)
+        first_g_ax = get_axis(axes, 0, 0)
+        first_g_ax.set_title('Images for G-GAN')
+        for i in range(len(input_g)):
+            input_ax = get_axis(axes, 0, i)
+            input_img = input_g[i]
+            output_ax = get_axis(axes, 1, i)
+            output_img = output_g[i]
+            plot_image(input_ax, input_img)
+            plot_image(output_ax, output_img)
+        first_f_ax = get_axis(axes, 0, 0)
+        first_f_ax.set_title('Images for F-GAN')
+        n = len(input_g)
+        for i in range(len(input_f)):
+            n += i
+            input_ax = get_axis(axes, 0, n)
+            input_img = input_f[i]
+            output_ax = get_axis(axes, 1, n)
+            output_img = output_f[i]
+            plot_image(input_ax, input_img)
+            plot_image(output_ax, output_img)    
         fig.suptitle(f"Batch: {epoch_number}", size='xx-large')
-        fig.savefig(output_file + ".pdf")
+        fig.savefig(self.preview_output + ".pdf")
 
     # create a line plot of loss for the gan and save to file
-    def plot_history(self, d1_hist, d2_hist, g_hist):
+    def plot_history(self):
         # plot history
-        pyplot.plot(d1_hist, label='crit_real loss')
-        pyplot.plot(d2_hist, label='crit_fake loss')
-        pyplot.plot(g_hist, label='gen loss')
-        pyplot.legend()
-        pyplot.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
-        pyplot.close()
+        for key, val in self.losses:
+            plt.plot(val, label=key)
+        plt.legend()
+        plt.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
+        plt.close()
 
     @tf.function #speed up code
     def train_step(self, real_x, real_y):
@@ -261,10 +282,13 @@ class CycleGAN(object):
 
             total_cycle_loss = calc_cycle_loss(real_x, cycled_x) + calc_cycle_loss(real_y, cycled_y)
 
-            # Total generator loss = adversarial loss + cycle loss
-            total_gen_g_loss = gen_g_loss + total_cycle_loss + identity_loss(real_y, same_y)
-            total_gen_f_loss = gen_f_loss + total_cycle_loss + identity_loss(real_x, same_x)
+            identity_loss_g = identity_loss(real_y, same_y)
+            identity_loss_f = identity_loss(real_x, same_x)
 
+
+            # Total generator loss = adversarial loss + cycle loss
+            total_gen_g_loss = gen_g_loss + total_cycle_loss + identity_loss_g
+            total_gen_f_loss = gen_f_loss + total_cycle_loss + identity_loss_f
             disc_x_loss = discriminator_loss(disc_real_x, disc_fake_x)
             disc_y_loss = discriminator_loss(disc_real_y, disc_fake_y)
 
@@ -280,20 +304,25 @@ class CycleGAN(object):
         self.generator_f_optimizer.apply_gradients(zip(generator_f_gradients, self.generator_f.trainable_variables))
         self.discriminator_x_optimizer.apply_gradients(zip(discriminator_x_gradients, self.discriminator_x.trainable_variables))
         self.discriminator_y_optimizer.apply_gradients(zip(discriminator_y_gradients, self.discriminator_y.trainable_variables))
+        
+        return {"gen_g_loss": gen_g_loss, "gen_f_loss": gen_f_loss, "identity_loss_g": identity_loss_g, "identity_loss_f": identity_loss_f,
+                "total_gen_g_loss": total_gen_g_loss, "total_gen_f_loss": total_gen_f_loss, "total_cycle_loss": total_cycle_loss}
 
 
     def train(self, epochs):
         # manually enumerate epochs
         for i in range(epochs):
             print("####### Epoch", i, "#######")
-            for j, (batch1, batch2) in enumerate(zip(self.dataset1, self.dataset2)):
-                self.train_step(batch1, batch2)
+            for j, (batch1, batch2) in enumerate(iter(self.loader)):
+                losses = self.train_step(batch1, batch2)
+                for key, val in losses.items():
+                    self.losses[key].append(val)
+                print(f"\r>Gen losses (g/f): {losses['gen_g_loss']}/{losses['gen_f_loss']}, identity: {losses['identity_loss_g']}/{losses['identity_loss_f']},\
+                     cycle: {losses['total_cycle_loss']}, total: {losses['total_gen_g_loss']}/{losses['total_gen_f_loss']}", end="", flush=True)
             # evaluate the model performance every 'epoch'
             else: #is executed after for-loop
-                translated_image = self.generator_g(batch1[0], training=False)
-                self.summarize_performance(batch1[0], batch2[0:5], translated_image, self.config['output_file'], epoch)
+                translated_image_g = self.generator_g(batch1[0:2], training=False)
+                translated_image_f = self.generator_f(batch1[0:2], training=False)
+                self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f, i)
         # line plots of loss
-        self.plot_history(c1_hist, c2_hist, g_hist)
-
-
-
+        self.plot_history()

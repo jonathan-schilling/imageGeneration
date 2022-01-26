@@ -9,7 +9,7 @@ import glob
 from pathlib import Path
 
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import matplotlib.plt as plt
 import argparse
 import ntpath
 

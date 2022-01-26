@@ -10,7 +10,7 @@ from trainer import Trainer
 from data_loader import Loader
 
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import matplotlib.plt as plt
 
 de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
 def plot_image(ax, image):
