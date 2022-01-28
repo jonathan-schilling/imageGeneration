@@ -14,7 +14,7 @@ from tensorflow.keras import backend
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Reshape, Flatten, Conv2D, Conv2DTranspose, LeakyReLU, ReLU, \
-    BatchNormalization, Layer
+    BatchNormalization, Layer, add
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.train import Checkpoint, CheckpointManager
@@ -50,15 +50,23 @@ class ReflectionPadding2D(Layer):  # From https://stackoverflow.com/questions/50
 class ResBlock(Layer):
     def __init__(self, filters):
         super(ResBlock, self).__init__()
-        self.model = Sequential([
-            d_conv(filters),
-            d_conv(filters)
-        ])
+        self.filters = filters
+        self.conv1 = Conv2D(filters=self.filters, kernel_size=(3, 3), padding="same", strides=(1, 1))
+        self.instance1 = InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
+                                   gamma_initializer="random_uniform")  # IntsanceNormalisation
+        self.relu = ReLU()
+        self.conv2 = Conv2D(filters=self.filters, kernel_size=(3, 3), padding="same", strides=(1, 1))
+        self.instance2 = InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
+                              gamma_initializer="random_uniform")
 
     def call(self, x):
-        residual = x
-        out = self.model(x)
-        out += residual
+        fx = self.conv1(x)
+        fx = self.instance1(fx)
+        fx = self.relu(fx)
+        fx = self.conv2(fx)
+        out = add([x,fx])
+        out = self.relu(out)
+        out = self.instance2(out)
         return out
 
 
@@ -98,7 +106,7 @@ def define_discriminator():
 
 def conv_c7_s1(filters, use_tanh=False):
     model = Sequential([
-        Conv2D(filters=filters, kernel_size=(7, 7), strides=(1, 1)),
+        Conv2D(filters=filters, kernel_size=(7, 7), strides=(1, 1), padding="same"),
         InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
                               gamma_initializer="random_uniform"),
         Tanh() if use_tanh else ReLU()
@@ -119,7 +127,7 @@ def d_conv(filters):
 
 def u_conv(filters):
     model = Sequential([
-        Conv2DTranspose(filters=filters, kernel_size=(3, 3), strides=(2, 2)),
+        Conv2DTranspose(filters=filters, kernel_size=(3, 3), strides=(2, 2), padding="same"),
         InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
                               gamma_initializer="random_uniform"),
         ReLU()
@@ -225,6 +233,8 @@ class CycleGAN(object):
             print('Latest checkpoint restored!!')
         """
         print("Initialized CycleGAN SUCCESS!")
+        self.generator_g.build(input_shape=(batch_size, *image_size, 3))
+        self.generator_g.summary()
 
     # generate samples and save as a plot and save the model
     def summarize_performance(self, input_g, input_f, output_g, output_f, epoch_number):
@@ -276,7 +286,7 @@ class CycleGAN(object):
         plt.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
         plt.close()
 
-    #@tf.function  # speed up code
+    @tf.function  # speed up code
     def train_step(self, real_x, real_y):
         # persistent is set to True because the tape is used more than
         # once to calculate the gradients.
@@ -344,8 +354,11 @@ class CycleGAN(object):
                 for key, val in losses.items():
                     self.losses[key].append(val)
                 print(
-                    f"\r>Gen losses (g/f): {losses['gen_g_loss']}/{losses['gen_f_loss']}, identity: {losses['identity_loss_g']}/{losses['identity_loss_f']},\
-                     cycle: {losses['total_cycle_loss']}, total: {losses['total_gen_g_loss']}/{losses['total_gen_f_loss']}",
+                    f"\r>Gen losses (g/f): {losses['gen_g_loss']:.4f}/{losses['gen_f_loss']:.4f},"
+                    f" identity: {losses['identity_loss_g']:.4f}/{losses['identity_loss_f']:.4f},"
+                    f" cycle: {losses['total_cycle_loss']:.4f},"
+                    f" total: {losses['total_gen_g_loss']:.4f}/{losses['total_gen_f_loss']:.4f}, "
+                    f"Batch {j}",
                     end="", flush=True)
             # evaluate the model performance every 'epoch'
             else:  # is executed after for-loop
