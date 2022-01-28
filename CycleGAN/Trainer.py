@@ -1,7 +1,7 @@
 import argparse
-from CycleGAN.CycleGAN import CycleGAN
+from CycleGAN import CycleGAN
 
-img_height, img_width = 72, 128
+img_height, img_width = 256, 256
 
 if __name__ == '__main__':
     # Parse Arguments #

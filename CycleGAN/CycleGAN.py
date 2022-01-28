@@ -13,14 +13,15 @@ import tensorflow as tf
 from tensorflow.keras import backend
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Reshape, Flatten, Conv2D, Conv2DTranspose, LeakyReLU, ReLU, BatchNormalization, Layer
+from tensorflow.keras.layers import Dense, Reshape, Flatten, Conv2D, Conv2DTranspose, LeakyReLU, ReLU, \
+    BatchNormalization, Layer
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.train import Checkpoint, CheckpointManager
 from tensorflow_addons.layers import InstanceNormalization
-import matplotlib.plt as plt
+import matplotlib.pyplot as plt
 
-from CycleGAN.data_loader import Loader
+from data_loader import Loader
 
 
 class Tanh(tf.keras.layers.Layer):
@@ -29,6 +30,7 @@ class Tanh(tf.keras.layers.Layer):
 
     def call(self, inputs):
         return tf.keras.activations.tanh(inputs)
+
 
 class ReflectionPadding2D(Layer):  # From https://stackoverflow.com/questions/50677544/reflection-padding-conv2d
     def __init__(self, padding=(1, 1), **kwargs):
@@ -44,6 +46,7 @@ class ReflectionPadding2D(Layer):  # From https://stackoverflow.com/questions/50
         w_pad, h_pad = self.padding
         return tf.pad(x, [[0, 0], [h_pad, h_pad], [w_pad, w_pad], [0, 0]], 'REFLECT')
 
+
 class ResBlock(Layer):
     def __init__(self, filters):
         super(ResBlock, self).__init__()
@@ -58,14 +61,22 @@ class ResBlock(Layer):
         out += residual
         return out
 
+
 def k_conv(filter, norm):
     if norm:
         model = Sequential([
-            Conv2D(filters=filter, kernel_size=(4,4), strides=(2,2)),
-            InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform", gamma_initializer="random_uniform") if norm else None,
+            Conv2D(filters=filter, kernel_size=(4, 4), strides=(2, 2)),
+            InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
+                                  gamma_initializer="random_uniform"),
+            LeakyReLU(alpha=0.2)
+        ])
+    else:
+        model = Sequential([
+            Conv2D(filters=filter, kernel_size=(4, 4), strides=(2, 2)),
             LeakyReLU(alpha=0.2)
         ])
     return model
+
 
 # define the standalone critic model
 def define_discriminator():
@@ -74,45 +85,52 @@ def define_discriminator():
         k_conv(64, False),
 
         k_conv(128, True),
-        
+
         k_conv(256, True),
-        
+
         k_conv(512, True),
 
-        Conv2D(filters=1, kernel_size=(4,4), strides=(1,1))
+        Conv2D(filters=1, kernel_size=(4, 4), strides=(1, 1))
     ])
 
     return model
 
+
 def conv_c7_s1(filters, use_tanh=False):
     model = Sequential([
-        Conv2D(filters=filters, kernel_size=(7,7), strides=(1,1)),
-        InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform", gamma_initializer="random_uniform"),
+        Conv2D(filters=filters, kernel_size=(7, 7), strides=(1, 1)),
+        InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
+                              gamma_initializer="random_uniform"),
         Tanh() if use_tanh else ReLU()
     ])
     return model
 
+
 def d_conv(filters):
     model = Sequential([
         ReflectionPadding2D(),
-        Conv2D(filters=filters, kernel_size=(3,3), strides=(2,2)),
-        InstanceNormalization(axis=1, center=True,scale=True, beta_initializer="random_uniform", gamma_initializer="random_uniform"), # IntsanceNormalisation
+        Conv2D(filters=filters, kernel_size=(3, 3), strides=(2, 2)),
+        InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
+                              gamma_initializer="random_uniform"),  # IntsanceNormalisation
         ReLU()
     ])
     return model
 
+
 def u_conv(filters):
     model = Sequential([
-        Conv2DTranspose(filters=filters, kernel_size=(3,3), strides=(2,2)),
-        InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform", gamma_initializer="random_uniform"),
+        Conv2DTranspose(filters=filters, kernel_size=(3, 3), strides=(2, 2)),
+        InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
+                              gamma_initializer="random_uniform"),
         ReLU()
     ])
     return model
+
 
 # define the standalone generator model
 def define_generator():
     model = Sequential([
-        conv_c7_s1(64), 
+        conv_c7_s1(64),
 
         d_conv(128),
         d_conv(256),
@@ -138,22 +156,27 @@ def define_generator():
 LAMBDA = 10
 loss_fn = BinaryCrossentropy(from_logits=True)
 
+
 def discriminator_loss(real, generated):
-  real_loss = loss_fn(tf.ones_like(real), real)
-  generated_loss = loss_fn(tf.zeros_like(generated), generated)
-  total_disc_loss = real_loss + generated_loss
-  return total_disc_loss * 0.5
-  
+    real_loss = loss_fn(tf.ones_like(real), real)
+    generated_loss = loss_fn(tf.zeros_like(generated), generated)
+    total_disc_loss = real_loss + generated_loss
+    return total_disc_loss * 0.5
+
+
 def generator_loss(generated):
-  return loss_fn(tf.ones_like(generated), generated)
-  
+    return loss_fn(tf.ones_like(generated), generated)
+
+
 def calc_cycle_loss(real_image, cycled_image):
-  loss = tf.reduce_mean(tf.abs(real_image - cycled_image))
-  return LAMBDA * loss
+    loss = tf.reduce_mean(tf.abs(real_image - cycled_image))
+    return LAMBDA * loss
+
 
 def identity_loss(real_image, same_image):
-  loss = tf.reduce_mean(tf.abs(real_image - same_image))
-  return LAMBDA * 0.5 * loss
+    loss = tf.reduce_mean(tf.abs(real_image - same_image))
+    return LAMBDA * 0.5 * loss
+
 
 class CycleGAN(object):
     def __init__(self, dataset1_path, dataset2_path, path_like, batch_size, image_size):
@@ -180,9 +203,10 @@ class CycleGAN(object):
         self.discriminator_x = define_discriminator()
         self.discriminator_y = define_discriminator()
 
-        self.losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [], "total_gen_g_loss": [], "total_gen_f_loss": [],
-                        "total_cycle_loss": []}
-        
+        self.losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [],
+                       "total_gen_g_loss": [], "total_gen_f_loss": [],
+                       "total_cycle_loss": []}
+        """
         ckpt = Checkpoint(
             self.generator_g,
             self.generator_f,
@@ -193,15 +217,14 @@ class CycleGAN(object):
             self.discriminator_x_optimizer,
             self.discriminator_y_optimizer)
 
-        ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)   
+        ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
 
         # if a checkpoint exists, restore the latest checkpoint.
         if ckpt_manager.latest_checkpoint:
             ckpt.restore(ckpt_manager.latest_checkpoint)
-            print ('Latest checkpoint restored!!')
-
+            print('Latest checkpoint restored!!')
+        """
         print("Initialized CycleGAN SUCCESS!")
-
 
     # generate samples and save as a plot and save the model
     def summarize_performance(self, input_g, input_f, output_g, output_f, epoch_number):
@@ -210,7 +233,7 @@ class CycleGAN(object):
             ax.imshow(image)
 
         def get_axis(axes, x, y):
-            ax = axes[x,y]
+            ax = axes[x, y]
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
             return ax
@@ -218,8 +241,9 @@ class CycleGAN(object):
         de_normalization_layer = tf.keras.layers.Rescaling(1. / 2., offset=0.5)
 
         number_of_cases = len(input_g) + len(input_f)
-    
-        fig, axes = plt.subplots(figsize=(10, 5*number_of_cases), nrows=number_of_cases, ncols=2, sharex=True, sharey=True)
+
+        fig, axes = plt.subplots(figsize=(10, 5 * number_of_cases), nrows=number_of_cases, ncols=2, sharex=True,
+                                 sharey=True)
         first_g_ax = get_axis(axes, 0, 0)
         first_g_ax.set_title('Images for G-GAN')
         for i in range(len(input_g)):
@@ -239,7 +263,7 @@ class CycleGAN(object):
             output_ax = get_axis(axes, 1, n)
             output_img = output_f[i]
             plot_image(input_ax, input_img)
-            plot_image(output_ax, output_img)    
+            plot_image(output_ax, output_img)
         fig.suptitle(f"Batch: {epoch_number}", size='xx-large')
         fig.savefig(self.preview_output + ".pdf")
 
@@ -252,7 +276,7 @@ class CycleGAN(object):
         plt.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
         plt.close()
 
-    @tf.function #speed up code
+    #@tf.function  # speed up code
     def train_step(self, real_x, real_y):
         # persistent is set to True because the tape is used more than
         # once to calculate the gradients.
@@ -285,7 +309,6 @@ class CycleGAN(object):
             identity_loss_g = identity_loss(real_y, same_y)
             identity_loss_f = identity_loss(real_x, same_x)
 
-
             # Total generator loss = adversarial loss + cycle loss
             total_gen_g_loss = gen_g_loss + total_cycle_loss + identity_loss_g
             total_gen_f_loss = gen_f_loss + total_cycle_loss + identity_loss_f
@@ -302,12 +325,15 @@ class CycleGAN(object):
         # Apply the gradients to the optimizer
         self.generator_g_optimizer.apply_gradients(zip(generator_g_gradients, self.generator_g.trainable_variables))
         self.generator_f_optimizer.apply_gradients(zip(generator_f_gradients, self.generator_f.trainable_variables))
-        self.discriminator_x_optimizer.apply_gradients(zip(discriminator_x_gradients, self.discriminator_x.trainable_variables))
-        self.discriminator_y_optimizer.apply_gradients(zip(discriminator_y_gradients, self.discriminator_y.trainable_variables))
-        
-        return {"gen_g_loss": gen_g_loss, "gen_f_loss": gen_f_loss, "identity_loss_g": identity_loss_g, "identity_loss_f": identity_loss_f,
-                "total_gen_g_loss": total_gen_g_loss, "total_gen_f_loss": total_gen_f_loss, "total_cycle_loss": total_cycle_loss}
+        self.discriminator_x_optimizer.apply_gradients(
+            zip(discriminator_x_gradients, self.discriminator_x.trainable_variables))
+        self.discriminator_y_optimizer.apply_gradients(
+            zip(discriminator_y_gradients, self.discriminator_y.trainable_variables))
 
+        return {"gen_g_loss": gen_g_loss, "gen_f_loss": gen_f_loss, "identity_loss_g": identity_loss_g,
+                "identity_loss_f": identity_loss_f,
+                "total_gen_g_loss": total_gen_g_loss, "total_gen_f_loss": total_gen_f_loss,
+                "total_cycle_loss": total_cycle_loss}
 
     def train(self, epochs):
         # manually enumerate epochs
@@ -317,10 +343,12 @@ class CycleGAN(object):
                 losses = self.train_step(batch1, batch2)
                 for key, val in losses.items():
                     self.losses[key].append(val)
-                print(f"\r>Gen losses (g/f): {losses['gen_g_loss']}/{losses['gen_f_loss']}, identity: {losses['identity_loss_g']}/{losses['identity_loss_f']},\
-                     cycle: {losses['total_cycle_loss']}, total: {losses['total_gen_g_loss']}/{losses['total_gen_f_loss']}", end="", flush=True)
+                print(
+                    f"\r>Gen losses (g/f): {losses['gen_g_loss']}/{losses['gen_f_loss']}, identity: {losses['identity_loss_g']}/{losses['identity_loss_f']},\
+                     cycle: {losses['total_cycle_loss']}, total: {losses['total_gen_g_loss']}/{losses['total_gen_f_loss']}",
+                    end="", flush=True)
             # evaluate the model performance every 'epoch'
-            else: #is executed after for-loop
+            else:  # is executed after for-loop
                 translated_image_g = self.generator_g(batch1[0:2], training=False)
                 translated_image_f = self.generator_f(batch1[0:2], training=False)
                 self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f, i)

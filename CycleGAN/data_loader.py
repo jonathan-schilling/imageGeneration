@@ -20,7 +20,7 @@ class Loader:
             )
 
         normalization_layer = Rescaling(1. / 127.5, offset=-1)
-        dataset = dataset.map(lambda x, y: (normalization_layer(x), y))
+        dataset = dataset.map(lambda x: normalization_layer(x))
         dataset = dataset.cache().shuffle(10000).prefetch(buffer_size=AUTOTUNE)
         return dataset
 
@@ -31,7 +31,7 @@ class Loader:
 
     def __next__(self):
         def get_batch_size(b):
-            return b[0].shape[0]
+            return b.shape[0]
         x_next = next(self.x_dataset_iter)
         y_next = next(self.y_dataset_iter)
         # Both batches must be exactly batch_size big:
