@@ -195,6 +195,7 @@ class CycleGAN(object):
         if not path.exists(checkpoint_path):
             os.mkdir(checkpoint_path)
         self.preview_output = path.join(path_like, "preview")
+        self.path = path_like
 
         self.loader = Loader(dataset1_path, dataset2_path, image_size, batch_size)
         self.batch_size = batch_size
@@ -214,24 +215,26 @@ class CycleGAN(object):
         self.losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [],
                        "total_gen_g_loss": [], "total_gen_f_loss": [],
                        "total_cycle_loss": []}
-        """
-        ckpt = Checkpoint(
-            self.generator_g,
-            self.generator_f,
-            self.discriminator_x,
-            self.discriminator_y,
-            self.generator_g_optimizer,
-            self.generator_f_optimizer,
-            self.discriminator_x_optimizer,
-            self.discriminator_y_optimizer)
 
-        ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
+        ckpt = Checkpoint(
+            generator_g=self.generator_g,
+            generator_f=self.generator_f,
+            discriminator_x=self.discriminator_x,
+            discriminator_y=self.discriminator_y,
+            generator_g_optimizer=self.generator_g_optimizer,
+            generator_f_optimizer=self.generator_f_optimizer,
+            discriminator_x_optimizer=self.discriminator_x_optimizer,
+            discriminator_y_optimizer=self.discriminator_y_optimizer)
+
+        self.ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=5)
 
         # if a checkpoint exists, restore the latest checkpoint.
-        if ckpt_manager.latest_checkpoint:
-            ckpt.restore(ckpt_manager.latest_checkpoint)
+        if self.ckpt_manager.latest_checkpoint:
+            ckpt.restore(self.ckpt_manager.latest_checkpoint)
             print('Latest checkpoint restored!!')
-        """
+        else:
+            print("No checkpoints were restored!!")
+
         print("Initialized CycleGAN SUCCESS!")
         self.generator_g.build(input_shape=(batch_size, *image_size, 3))
         self.generator_g.summary()
@@ -243,7 +246,7 @@ class CycleGAN(object):
             ax.imshow(image)
 
         def get_axis(axes, x, y):
-            ax = axes[x, y]
+            ax = axes[y, x]
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
             return ax
@@ -280,7 +283,8 @@ class CycleGAN(object):
     # create a line plot of loss for the gan and save to file
     def plot_history(self):
         # plot history
-        for key, val in self.losses:
+        plt.clf()
+        for key, val in self.losses.items():
             plt.plot(val, label=key)
         plt.legend()
         plt.savefig(path.join(self.path, 'plot_line_plot_loss.png'))
@@ -362,8 +366,10 @@ class CycleGAN(object):
                     end="", flush=True)
             # evaluate the model performance every 'epoch'
             else:  # is executed after for-loop
+                print()
                 translated_image_g = self.generator_g(batch1[0:2], training=False)
                 translated_image_f = self.generator_f(batch1[0:2], training=False)
                 self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f, i)
+                self.ckpt_manager.save(checkpoint_number=i)
         # line plots of loss
         self.plot_history()

@@ -32,11 +32,10 @@ class Loader:
     def __next__(self):
         def get_batch_size(b):
             return b.shape[0]
-        x_next = next(self.x_dataset_iter)
-        y_next = next(self.y_dataset_iter)
+
         # Both batches must be exactly batch_size big:
-        if (get_batch_size(x_next) != self.batch_size or
-                get_batch_size(y_next) != self.batch_size):
-            raise StopIteration()
-        else:
-            return x_next, y_next
+        x_next = next(self.x_dataset_iter)
+        x_next = x_next if get_batch_size(x_next) == self.batch_size else next(self.x_dataset_iter)
+        y_next = next(self.y_dataset_iter)
+        y_next = y_next if get_batch_size(y_next) == self.batch_size else next(self.y_dataset_iter)
+        return x_next, y_next

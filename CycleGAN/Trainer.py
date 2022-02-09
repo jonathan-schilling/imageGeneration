@@ -2,7 +2,7 @@ import argparse
 from CycleGAN import CycleGAN
 import tensorflow as tf
 
-img_height, img_width = 128, 128
+img_height, img_width = 256, 256
 
 if __name__ == '__main__':
     # Parse Arguments #
