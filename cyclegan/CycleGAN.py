@@ -1,8 +1,10 @@
 import imp
 import os
+import pickle
 from re import I
 import shutil
 from os import path
+from time import strftime, gmtime, time
 
 from numpy import expand_dims, prod
 from numpy import mean
@@ -212,9 +214,14 @@ class CycleGAN(object):
         self.discriminator_x = define_discriminator()
         self.discriminator_y = define_discriminator()
 
-        self.losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [],
-                       "total_gen_g_loss": [], "total_gen_f_loss": [],
-                       "total_cycle_loss": []}
+        self.losses_path = path.join(path_like, "losses.pickle")
+        if path.exists(self.losses_path):
+            with open(self.losses_path, mode='rb') as f:
+                self.losses = pickle.load(f)
+        else:
+            self.losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [],
+                           "total_gen_g_loss": [], "total_gen_f_loss": [],
+                           "total_cycle_loss": []}
 
         ckpt = Checkpoint(
             generator_g=self.generator_g,
@@ -230,9 +237,11 @@ class CycleGAN(object):
 
         # if a checkpoint exists, restore the latest checkpoint.
         if self.ckpt_manager.latest_checkpoint:
+            self.epoch = int(str(self.ckpt_manager.latest_checkpoint).split("-")[-1])
             ckpt.restore(self.ckpt_manager.latest_checkpoint)
             print('Latest checkpoint restored!!')
         else:
+            self.epoch = 0
             print("No checkpoints were restored!!")
 
         print("Initialized CycleGAN SUCCESS!")
@@ -351,25 +360,33 @@ class CycleGAN(object):
 
     def train(self, epochs):
         # manually enumerate epochs
+        start_time = time()
         for i in range(epochs):
-            print("####### Epoch", i, "#######")
+            local_losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [],
+                            "total_gen_g_loss": [], "total_gen_f_loss": [],
+                            "total_cycle_loss": []}
+            print("####### Epoch", i+self.epoch, "#######")
             for j, (batch1, batch2) in enumerate(iter(self.loader)):
                 losses = self.train_step(batch1, batch2)
                 for key, val in losses.items():
-                    self.losses[key].append(val)
+                    local_losses[key].append(val)
                 print(
                     f"\r>Gen losses (g/f): {losses['gen_g_loss']:.4f}/{losses['gen_f_loss']:.4f},"
                     f" identity: {losses['identity_loss_g']:.4f}/{losses['identity_loss_f']:.4f},"
                     f" cycle: {losses['total_cycle_loss']:.4f},"
                     f" total: {losses['total_gen_g_loss']:.4f}/{losses['total_gen_f_loss']:.4f}, "
-                    f"Batch {j}",
+                    f"Batch {j}, passed time: {strftime('%H:%M:%S', gmtime(time() - start_time))}",
                     end="", flush=True)
             # evaluate the model performance every 'epoch'
             else:  # is executed after for-loop
                 print()
+                for key, val in local_losses.items():
+                    self.losses[key].append(sum(val) / len(val))
                 translated_image_g = self.generator_g(batch1[0:2], training=False)
                 translated_image_f = self.generator_f(batch1[0:2], training=False)
-                self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f, i)
-                self.ckpt_manager.save(checkpoint_number=i)
+                self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f, i+self.epoch)
+                self.ckpt_manager.save(checkpoint_number=i+self.epoch+1)
+                with open(self.losses_path, mode='wb')as f:
+                    pickle.dump(self.losses, f)
         # line plots of loss
         self.plot_history()
