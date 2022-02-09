@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.train import Checkpoint, CheckpointManager
 import numpy as np
 import os
 from time import time, strftime, gmtime
@@ -10,7 +11,7 @@ from tensorflow.python.data import AUTOTUNE
 import csv
 from generator_output import plot_image, create_samples
 
-import matplotlib.plt as plt
+import matplotlib.pyplot as plt
 import argparse
 import time
 import ntpath
@@ -159,49 +160,74 @@ def display_examples(samples, number_of_images, output_image, info_text):
     plt.close(figure)
 
 
+#@tf.function  # speed up code
+def train_step(input_real, input_z, gen_model, disc_model, loss_fn, g_optimizer, d_optimizer):
+    with tf.GradientTape() as g_tape:
+        g_output = gen_model(input_z)
+        d_logits_fake = disc_model(g_output, training=True)
+        labels_real = tf.ones_like(d_logits_fake)
+        g_loss = loss_fn(y_true=labels_real, y_pred=d_logits_fake)
+
+        g_grads = g_tape.gradient(g_loss, gen_model.trainable_variables)
+        g_optimizer.apply_gradients(grads_and_vars=zip(g_grads, gen_model.trainable_variables))
+
+    with tf.GradientTape() as d_tape1:
+        d_logits_real = disc_model(input_real, training=True)
+        d_labels_real = tf.ones_like(d_logits_real)
+        d_loss_real = loss_fn(y_true=d_labels_real, y_pred=d_logits_real)
+
+    d_grads1 = d_tape1.gradient(d_loss_real, disc_model.trainable_variables)
+    d_optimizer.apply_gradients(grads_and_vars=zip(d_grads1, disc_model.trainable_variables))
+
+    with tf.GradientTape() as d_tape2:
+        d_logits_fake = disc_model(g_output, training=True)
+        d_labels_fake = tf.zeros_like(d_logits_fake)
+        d_loss_fake = loss_fn(y_true=d_labels_fake, y_pred=d_logits_fake)
+
+        d_loss = d_loss_fake + d_loss_real
+
+    d_grads2 = d_tape2.gradient(d_loss_fake, disc_model.trainable_variables)
+    d_optimizer.apply_gradients(grads_and_vars=zip(d_grads2, disc_model.trainable_variables))
+
+    return g_loss, d_loss, d_loss_real, d_loss_fake, d_logits_real, d_logits_fake
+
+
 def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
                  learning_rate_gen, output_image, continue_):
     if not continue_ and os.path.exists(checkpoints):
         shutil.rmtree(checkpoints)
 
-    # Check GPU #
-    if len(tf.config.list_physical_devices('GPU')) != 0:
-        # device_name = tf.config.list_physical_devices('GPU')[0].name
-        device_name = '/GPU:0'
-    else:
-        device_name = '/CPU:0'
-
-    print(device_name)
+    if not os.path.exists(checkpoints):
+        os.mkdir(checkpoints)
 
     # Create Generator #
     gen_model = make_dcgan_generator(output_size=image_size)
+    g_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_gen)
     print("###################################")
     print("Using Generator-Model:")
     gen_model.summary()
 
-    gen_checkpoint_path = checkpoints + "/generator/" + "/{epoch:04d}.ckpt"
-    gen_checkpoint_dir = os.path.dirname(gen_checkpoint_path)
-
-    if not continue_:
-        gen_model.save(gen_checkpoint_dir + "/gen-model")
-
-    if continue_:
-        gen_model.load_weights(tf.train.latest_checkpoint(gen_checkpoint_dir))
-
     # Create Discriminator #
     disc_model = make_dcgan_discriminator(dropout, input_size=image_size)
+    d_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_disc)
     print("###################################")
     print("Using Discriminator-Model:")
     disc_model.summary()
 
-    disc_checkpoint_path = checkpoints + "/discriminator/" + "/{epoch:04d}.ckpt"
-    disc_checkpoint_dir = os.path.dirname(disc_checkpoint_path)
+    ckpt = Checkpoint(
+        gen_model=gen_model,
+        disc_model=disc_model,
+        g_optimizer=g_optimizer,
+        d_optimizer=d_optimizer)
 
-    if not continue_:
-        disc_model.save(disc_checkpoint_dir + "/disc-model")
+    ckpt_manager = CheckpointManager(ckpt, checkpoints, max_to_keep=None)
 
-    if continue_:
-        disc_model.load_weights(tf.train.latest_checkpoint(disc_checkpoint_dir))
+    # if a checkpoint exists and continue is set, restore the latest checkpoint.
+    if continue_ and ckpt_manager.latest_checkpoint:
+        ckpt.restore(ckpt_manager.latest_checkpoint)
+        print('Latest checkpoint restored!!')
+    else:
+        print("No checkpoints were restored!!")
 
     # Log File #
 
@@ -214,19 +240,16 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
             training_log_csv.close()
 
     # Dataset #
-
     train_ds = get_dataset(data, batch_size)
 
     # Training #
 
     if continue_:
-        start_epoch = int(ntpath.basename(tf.train.latest_checkpoint(gen_checkpoint_dir)).split(".")[-2])
+        start_epoch = int(ntpath.basename(str(ckpt_manager.latest_checkpoint).split("-")[-1])) # TODO Debug
     else:
         start_epoch = 0
 
     loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
-    g_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_gen)
-    d_optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_disc)
 
     start_time = time.time()
 
@@ -236,32 +259,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
         for input_real, _ in train_ds:
             input_z = tf.random.uniform(shape=(batch_size, z_size), minval=-1.0, maxval=1.0)
-            with tf.GradientTape() as g_tape:
-                g_output = gen_model(input_z)
-                d_logits_fake = disc_model(g_output, training=True)
-                labels_real = tf.ones_like(d_logits_fake)
-                g_loss = loss_fn(y_true=labels_real, y_pred=d_logits_fake)
-
-            g_grads = g_tape.gradient(g_loss, gen_model.trainable_variables)
-            g_optimizer.apply_gradients(grads_and_vars=zip(g_grads, gen_model.trainable_variables))
-
-            with tf.GradientTape() as d_tape1:
-                d_logits_real = disc_model(input_real, training=True)
-                d_labels_real = tf.ones_like(d_logits_real)
-                d_loss_real = loss_fn(y_true=d_labels_real, y_pred=d_logits_real)
-
-            d_grads1 = d_tape1.gradient(d_loss_real, disc_model.trainable_variables)
-            d_optimizer.apply_gradients(grads_and_vars=zip(d_grads1, disc_model.trainable_variables))
-
-            with tf.GradientTape() as d_tape2:
-                d_logits_fake = disc_model(g_output, training=True)
-                d_labels_fake = tf.zeros_like(d_logits_fake)
-                d_loss_fake = loss_fn(y_true=d_labels_fake, y_pred=d_logits_fake)
-
-                d_loss = d_loss_fake + d_loss_real
-
-            d_grads2 = d_tape2.gradient(d_loss_fake, disc_model.trainable_variables)
-            d_optimizer.apply_gradients(grads_and_vars=zip(d_grads2, disc_model.trainable_variables))
+            g_loss, d_loss, d_loss_real, d_loss_fake, d_logits_real, d_logits_fake = train_step(input_real, input_z, gen_model, disc_model, loss_fn, g_optimizer, d_optimizer)
 
             epoch_losses.append(
                 (g_loss.numpy(), d_loss.numpy(), d_loss_real.numpy(), d_loss_fake.numpy())
@@ -290,8 +288,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
         ## Save model state ##
         if epoch % checkpoint_frequency == 0:
-            gen_model.save_weights(gen_checkpoint_path.format(epoch=epoch))
-            disc_model.save_weights(disc_checkpoint_path.format(epoch=epoch))
+            ckpt_manager.save(checkpoint_number = epoch)
 
 
 if __name__ == '__main__':
