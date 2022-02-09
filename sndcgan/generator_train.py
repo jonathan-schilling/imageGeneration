@@ -10,7 +10,7 @@ from tensorflow.python.data import AUTOTUNE
 import csv
 from generator_output import plot_image, create_samples
 
-import matplotlib.pyplot as plt
+import matplotlib.plt as plt
 import argparse
 import time
 import ntpath

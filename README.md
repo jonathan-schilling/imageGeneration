@@ -18,8 +18,14 @@ Anforderung: Label, Anzahl Bilder, Ziel: feste Datenbank bevor trainiert wird
 
 ### Model für Tageszeit-Manipulation
 
-- [ ] Architektur überlegen
+- [x] Architektur überlegen
 - [ ] Implementierung
+  - [ ] Datensatz einpflegen
+    - `Loader`-Klasse erstellen
+    - Cycle-Loader hinzufügen
+    - Batches müssen genau `batch_size` groß sein (*vielleicht*)
+    - Iterator -> Zwei Batches
+  - [ ] Implement `summarize_performance`
 - [ ] Training
 - [ ] Evaluieren
 
