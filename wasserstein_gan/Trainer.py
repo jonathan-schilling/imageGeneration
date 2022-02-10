@@ -4,6 +4,9 @@ import tensorflow as tf
 import numpy as np
 import os
 import pathlib
+
+from tensorflow.python.data import AUTOTUNE
+
 from WGAN import WGAN
 
 img_height, img_width = 144, 256
