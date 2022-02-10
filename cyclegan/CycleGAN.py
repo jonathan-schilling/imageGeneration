@@ -245,8 +245,6 @@ class CycleGAN(object):
             print("No checkpoints were restored!!")
 
         print("Initialized CycleGAN SUCCESS!")
-        self.generator_g.build(input_shape=(batch_size, *image_size, 3))
-        self.generator_g.summary()
 
     # generate samples and save as a plot and save the model
     def summarize_performance(self, input_g, input_f, output_g, output_f, epoch_number):
