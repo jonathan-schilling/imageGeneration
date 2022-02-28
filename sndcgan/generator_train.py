@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.train import Checkpoint, CheckpointManager
 import numpy as np
 import os
+from os import path
+import pickle
 from time import time, strftime, gmtime
 import pathlib
 import shutil
@@ -160,6 +162,16 @@ def display_examples(samples, number_of_images, output_image, info_text):
     plt.close(figure)
 
 
+# create a line plot of loss for the gan and save to file
+def plot_history(dir_path, losses):
+    # plot history
+    plt.clf()
+    for key, val in losses.items():
+        plt.plot(val, label=key)
+    plt.legend()
+    plt.savefig(path.join(dir_path, 'plot_line_plot_loss.png'))
+    plt.close()
+
 #@tf.function  # speed up code
 def train_step(input_real, input_z, gen_model, disc_model, loss_fn, g_optimizer, d_optimizer):
     with tf.GradientTape() as g_tape:
@@ -192,13 +204,13 @@ def train_step(input_real, input_z, gen_model, disc_model, loss_fn, g_optimizer,
     return g_loss, d_loss, d_loss_real, d_loss_fake, d_logits_real, d_logits_fake
 
 
-def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
+def train_models(dir_path, data, checkpoint_frequency, batch_size, num_epochs, dropout, learning_rate_disc,
                  learning_rate_gen, output_image, continue_):
-    if not continue_ and os.path.exists(checkpoints):
-        shutil.rmtree(checkpoints)
+    if not continue_ and os.path.exists(dir_path):
+        shutil.rmtree(dir_path)
 
-    if not os.path.exists(checkpoints):
-        os.mkdir(checkpoints)
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
 
     # Create Generator #
     gen_model = make_dcgan_generator(output_size=image_size)
@@ -214,30 +226,32 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     print("Using Discriminator-Model:")
     disc_model.summary()
 
+    # init checkpoints
+
     ckpt = Checkpoint(
         gen_model=gen_model,
         disc_model=disc_model,
         g_optimizer=g_optimizer,
         d_optimizer=d_optimizer)
 
-    ckpt_manager = CheckpointManager(ckpt, checkpoints, max_to_keep=None)
+    checkpoint_path = path.join(dir_path, "checkpoints")
+    ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=None)
 
     # if a checkpoint exists and continue is set, restore the latest checkpoint.
     if continue_ and ckpt_manager.latest_checkpoint:
-        ckpt.restore(ckpt_manager.latest_checkpoint)
+        ckpt.restore(ckpt_manager.latest_checkpoint).assert_existing_objects_matched()
         print('Latest checkpoint restored!!')
     else:
         print("No checkpoints were restored!!")
 
     # Log File #
 
-    log_file_path = checkpoints + "/training_log.csv"
-
-    if not continue_:
-        with open(log_file_path, 'w', newline='') as training_log_csv:
-            log_writer = csv.writer(training_log_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            log_writer.writerow(['Epoch', 'Epoch_Done_Timestamp', 'Avg_G_Loss', 'Avg_D_Loss', 'D_Real', 'D_Fake'])
-            training_log_csv.close()
+    losses_path = path.join(dir_path, "losses.pickle")
+    if path.exists(losses_path):
+        with open(losses_path, mode='rb') as f:
+            glob_losses = pickle.load(f)
+    else:
+        glob_losses = {"epoch": [], "avg_g_loss": [], "avg_d_loss": [], "d_real": [], "d_fake": []}
 
     # Dataset #
     train_ds = get_dataset(data, batch_size)
@@ -245,7 +259,7 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
     # Training #
 
     if continue_:
-        start_epoch = int(ntpath.basename(str(ckpt_manager.latest_checkpoint).split("-")[-1])) # TODO Debug
+        start_epoch = int(ntpath.basename(str(ckpt_manager.latest_checkpoint).split("-")[-1])) + 1
     else:
         start_epoch = 0
 
@@ -253,7 +267,9 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
     start_time = time.time()
 
-    for epoch in range(start_epoch, num_epochs):
+    local_losses = {"epoch": [], "avg_g_loss": [], "avg_d_loss": [], "d_real": [], "d_fake": []}
+    # nach Pyhton Machine Learning, Raschka & Mirjalili, 3rd Edition, ISBN 978-1-78995-575-0, Seite 640ff
+    for epoch in range(start_epoch, num_epochs): 
 
         epoch_losses, epoch_d_vals = [], []
 
@@ -270,14 +286,16 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
 
             epoch_d_vals.append((d_probs_real.numpy(), d_probs_fake.numpy()))
 
+        avg_losses = list(np.mean(epoch_losses, axis=0))
+        losses = {"epoch": epoch, "avg_g_loss": avg_losses[0], "avg_d_loss": avg_losses[1], "d_real": avg_losses[2], "d_fake": avg_losses[3]}
+
+        for key, val in losses.items():
+                    local_losses[key].append(val)
+
         epoch_duration = strftime('%H:%M:%S', gmtime(time.time() - start_time))
         info_text = 'Epoch {:03d} | ET {} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
             epoch, epoch_duration, *list(np.mean(epoch_losses, axis=0))
         )
-
-        with open(log_file_path, 'a', newline='') as training_log_csv:
-            log_writer = csv.writer(training_log_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            log_writer.writerow([epoch,epoch_duration,*list(np.mean(epoch_losses, axis=0))])
 
         print(info_text)
 
@@ -290,6 +308,17 @@ def train_models(checkpoints, data, checkpoint_frequency, batch_size, num_epochs
         if epoch % checkpoint_frequency == 0:
             ckpt_manager.save(checkpoint_number = epoch)
 
+            for key, val in local_losses.items():
+                    glob_value = glob_losses[key] + val
+                    glob_losses[key] = glob_value
+
+            with open(losses_path, mode='wb')as f:
+                    pickle.dump(glob_losses, f)
+
+            plot_history(dir_path, glob_losses)
+            
+            local_losses = {"epoch": [], "avg_g_loss": [], "avg_d_loss": [], "d_real": [], "d_fake": []}
+
 
 if __name__ == '__main__':
     # Parse Arguments #
@@ -298,10 +327,10 @@ if __name__ == '__main__':
     parser.add_argument('epochs', type=int, help='Number of epochs to train')
     parser.add_argument('-c', '--checkpoints', type=int, dest="chps", default=5,
                         help='Take checkpoint every x epochs. Default = 5')
-    parser.add_argument('-cd', '--checkpointDir', type=str, dest="checkpoints", default="training",
-                        help="The output directory where the checkpoints are saved. It will be created if it dosen't "
+    parser.add_argument('-d', '--directory', type=str, dest="dirPath", default="training",
+                        help="The output directory where the checkpoints and others are saved. It will be created if it dosen't "
                              "exist and overritten (!) if it does.")
-    parser.add_argument('-d', '--data', type=str, dest="data", default="dataset",
+    parser.add_argument('-x', '--data', type=str, dest="data", default="dataset",
                         help="The directory containing subdirectories (labels) with images to use for training.")
     parser.add_argument('-r', '--dropout', type=float, dest="dropout", default=0.5,
                         help="The dropout rate to use for the discriminator. Default = 0.5")
@@ -315,5 +344,5 @@ if __name__ == '__main__':
                         help="Continue training (default: Start from the beginning)")
 
     args = parser.parse_args()
-    train_models(args.checkpoints, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRateDisc,
+    train_models(args.dirPath, args.data, args.chps, args.bSize, args.epochs + 1, args.dropout, args.learnRateDisc,
                  args.learnRateGen, args.output, args.continue_)
