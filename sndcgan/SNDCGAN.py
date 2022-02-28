@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-import time
 import ntpath
 import pathlib
 import shutil
@@ -271,7 +270,7 @@ class SNDCGAN(object):
 
     def train(self, num_epochs, checkpoint_frequency):
 
-        start_time = time.time()
+        start_time = time()
         local_losses = {"epoch": [], "avg_g_loss": [], "avg_d_loss": [], "d_real": [], "d_fake": []}
 
         # nach Pyhton Machine Learning, Raschka & Mirjalili, 3rd Edition, ISBN 978-1-78995-575-0, Seite 640ff
@@ -297,7 +296,7 @@ class SNDCGAN(object):
             for key, val in avg_step_loss.items():
                 local_losses[key].append(val)
 
-            epoch_duration = strftime('%H:%M:%S', gmtime(time.time() - start_time))
+            epoch_duration = strftime('%H:%M:%S', gmtime(time() - start_time))
             info_text = 'Epoch {:04d} | ET {} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
                 epoch, epoch_duration, *avg_losses)
 
