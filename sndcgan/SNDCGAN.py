@@ -1,22 +1,23 @@
 import tensorflow as tf
-from tensorflow.train import Checkpoint, CheckpointManager
 import numpy as np
+import matplotlib.pyplot as plt
+
 import os
-from os import path
-import pickle
-from time import time, strftime, gmtime
+import time
+import ntpath
 import pathlib
 import shutil
 
+import pickle
+
+from tensorflow.train import Checkpoint, CheckpointManager
 from tensorflow.python.data import AUTOTUNE
 
-import csv
+from os import path
+from time import time, strftime, gmtime
+
 from generator_output import plot_image, create_samples
 
-import matplotlib.pyplot as plt
-import argparse
-import time
-import ntpath
 
 tf.random.set_seed(62)
 np.random.seed(87)
@@ -60,6 +61,8 @@ def make_dcgan_generator(output_size):
             activation='tanh'
         )
     ])
+
+    model._name="SNDC Generator"
 
     return model
 
@@ -120,6 +123,8 @@ def make_dcgan_discriminator(dropout_rate, input_size):
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(1)
     ])
+
+    model._name="SNDC Discriminator"
 
     return model
 
@@ -183,16 +188,30 @@ class SNDCGAN(object):
         checkpoint_path = path.join(dir_path, "checkpoints")
         self.ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=None)
 
+
+        ckpt_loaded = False
         # if a checkpoint exists and continue is set, restore the latest checkpoint.
         if continue_ and self.ckpt_manager.latest_checkpoint:
-            self.start_epoch = int(ntpath.basename(str(ckpt_manager.latest_checkpoint).split("-")[-1])) + 1
+            self.start_epoch = int(ntpath.basename(str(self.ckpt_manager.latest_checkpoint).split("-")[-1])) + 1
             ckpt.restore(self.ckpt_manager.latest_checkpoint).assert_existing_objects_matched()
+            ckpt_loaded = True
             print('Latest checkpoint restored!!')
         else:
             self.start_epoch = 0
             print("No checkpoints were restored!!")
 
-        print("Initialized SNDCGAN successfully!")
+        print()
+        self.gen_model.summary()
+
+        print()
+        self.disc_model.summary()
+        
+        if ckpt_loaded:
+            print("\nLatest checkpoint restored!!")
+        else:
+            print("\nNo checkpoints were restored!!")
+
+        print("\nInitialized SNDCGAN successfully!\n")
 
 
     # create a line plot of loss for the gan and save to file
