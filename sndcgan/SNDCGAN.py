@@ -61,7 +61,7 @@ def make_dcgan_generator(output_size):
         )
     ])
 
-    model._name="SNDC Generator"
+    model._name="SNDC_Generator"
 
     return model
 
@@ -123,7 +123,7 @@ def make_dcgan_discriminator(dropout_rate, input_size):
         tf.keras.layers.Dense(1)
     ])
 
-    model._name="SNDC Discriminator"
+    model._name="SNDC_Discriminator"
 
     return model
 
@@ -185,8 +185,7 @@ class SNDCGAN(object):
             d_optimizer=self.d_optimizer)
 
         checkpoint_path = path.join(dir_path, "checkpoints")
-        self.ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=None)
-
+        self.ckpt_manager = CheckpointManager(ckpt, checkpoint_path, max_to_keep=2)
 
         ckpt_loaded = False
         # if a checkpoint exists and continue is set, restore the latest checkpoint.
@@ -317,6 +316,12 @@ class SNDCGAN(object):
 
                 with open(self.losses_file, mode='wb')as f:
                         pickle.dump(self.losses, f)
+
+                gen_model_path = path.join(self.dir_path, "models","generator", "gen_model-" + str(epoch) + ".h5")
+                self.gen_model.save(gen_model_path, include_optimizer=False, save_format='h5')
+
+                disc_model_path = path.join(self.dir_path, "models","discriminator", "disc_model-" + str(epoch) + ".h5")
+                self.disc_model.save(disc_model_path, include_optimizer=False, save_format='h5')
 
                 self.plot_history()
                 
