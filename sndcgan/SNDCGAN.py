@@ -169,7 +169,7 @@ class SNDCGAN(object):
 
         self.loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
-        self.live_preview_file = path.join(dir_path, live_output + ".pdf")
+        self.live_preview_file = path.join(live_output + ".pdf")
 
         self.losses_file = path.join(dir_path, "losses.pickle")
         if path.exists(self.losses_file):
