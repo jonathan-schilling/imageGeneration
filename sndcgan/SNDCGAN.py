@@ -275,6 +275,7 @@ class SNDCGAN(object):
         # nach Pyhton Machine Learning, Raschka & Mirjalili, 3rd Edition, ISBN 978-1-78995-575-0, Seite 640ff
         for epoch in range(self.start_epoch, num_epochs):
             epoch_losses, epoch_d_vals = [], []
+            batch_start_time = time()
 
             for i, (input_real, _) in enumerate(self.train_ds):
                 input_z = tf.random.uniform(shape=(self.batch_size, self.z_size), minval=-1.0, maxval=1.0)
@@ -290,7 +291,7 @@ class SNDCGAN(object):
                 epoch_d_vals.append((d_probs_real.numpy(), d_probs_fake.numpy()))
 
                 print(
-                    f"\r>Batch {i:03d}, passed time: {strftime('%H:%M:%S', gmtime(time() - start_time))}",
+                    f"\r>Batch {i:03d}, passed time: {strftime('%M:%S', gmtime(time() - batch_start_time))}",
                     end="", flush=True)
 
             avg_losses = list(np.mean(epoch_losses, axis=0))
@@ -303,7 +304,7 @@ class SNDCGAN(object):
             info_text = 'Epoch {:04d} | ET {} min | Avg Losses G/D {:.4f}/{:.4f} [D-Real: {:.4f} D-Fake {:.4f}]'.format(
                 epoch, epoch_duration, *avg_losses)
 
-            print(info_text)
+            print("\r" + info_text)
 
             number_of_preview_images = 3
             fixed_z = tf.random.uniform(shape=(number_of_preview_images, self.z_size), minval=-1, maxval=1)
