@@ -276,7 +276,7 @@ class SNDCGAN(object):
         for epoch in range(self.start_epoch, num_epochs):
             epoch_losses, epoch_d_vals = [], []
 
-            for input_real, _ in self.train_ds:
+            for i, (input_real, _) in enumerate(self.train_ds):
                 input_z = tf.random.uniform(shape=(self.batch_size, self.z_size), minval=-1.0, maxval=1.0)
                 step_output = self.train_step(input_real, input_z)
 
@@ -288,6 +288,10 @@ class SNDCGAN(object):
                 d_probs_fake = tf.reduce_mean(tf.sigmoid(step_output[5]))
 
                 epoch_d_vals.append((d_probs_real.numpy(), d_probs_fake.numpy()))
+
+                print(
+                    f"\r>Batch {i:03d}, passed time: {strftime('%H:%M:%S', gmtime(time() - start_time))}",
+                    end="", flush=True)
 
             avg_losses = list(np.mean(epoch_losses, axis=0))
             avg_step_loss = {"epoch": epoch, "avg_g_loss": avg_losses[0], "avg_d_loss": avg_losses[1], "d_real": avg_losses[2], "d_fake": avg_losses[3]}

@@ -286,6 +286,7 @@ class CycleGAN(object):
             plot_image(output_ax, output_img)
         fig.suptitle(f"Batch: {epoch_number}", size='xx-large')
         fig.savefig(self.preview_output + ".pdf")
+        plt.close(fig)
 
     # create a line plot of loss for the gan and save to file
     def plot_history(self):
