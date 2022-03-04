@@ -54,7 +54,7 @@ def calculate_fid(disc_model, images_fake, images_real):
 
 # batch_size = number of images that get evaluated
 # step_size = each stepsize time fid will be calculated
-def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch):
+def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch, disc_epoch):
     
     model_path_disc = path.join(dir_path, "models", "discriminator")
     model_path_gen = path.join(dir_path, "models", "generator")
@@ -68,30 +68,41 @@ def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch):
     epoch_fids = []
     train_ds = get_dataset(dataset, batch_size, image_size)
     
+    img_real_used = []
+    random_z_used = []
+    batches_used = max_batches
+    
+    if len(train_ds) < max_batches:
+        batches_used = len(train_ds)
+        
+    for i, (images_real, _) in enumerate(train_ds):
+        
+            bSize = images_real.shape[0]
+            random_z = tf.random.uniform(shape=(bSize, z_size), minval=-1.0, maxval=1.0)
+
+            img_real_used.append(images_real)
+            random_z_used.append(random_z)
+            
+            if i == batches_used-1:
+                break
+
+    disc_model = tf.keras.models.load_model(path.join(model_path_disc, "disc_model-"+str(disc_epoch)+".h5"))
+    disc_model.pop()
+    disc_model.pop()
+    disc_model.add(tf.keras.layers.AveragePooling2D(pool_size=(8,8)))
+    disc_model.add(tf.keras.layers.Flatten())
+    
     for i, model in enumerate(epochs_used):
         print("\n## Start FID calculation of epoch", model)
-        disc_model = tf.keras.models.load_model(path.join(model_path_disc, "disc_model-"+str(model)+".h5"))
-        gen_model = tf.keras.models.load_model(path.join(model_path_gen, "gen_model-"+str(model)+".h5"))
         
-        disc_model.pop()
-        disc_model.pop()
-        disc_model.add(tf.keras.layers.AveragePooling2D(pool_size=(8,8)))
-        disc_model.add(tf.keras.layers.Flatten())
+        gen_model = tf.keras.models.load_model(path.join(model_path_gen, "gen_model-"+str(model)+".h5"))
         
         fids = []
         
-        if len(train_ds) < max_batches:
-            batches_used = len(train_ds)
-        else:
-            batches_used = max_batches
-        
-        for i, (images_real, _) in enumerate(train_ds):
+        for i, images_real in enumerate(img_real_used):
             print(f"\r### Calculate FID of Batch {i+1}/{batches_used}", end="", flush=True)
-
-            bSize = images_real.shape[0]
-
-            random_z = tf.random.uniform(shape=(bSize, z_size), minval=-1.0, maxval=1.0)
-            images_fake = create_samples(gen_model, random_z , bSize)
+            
+            images_fake = create_samples(gen_model, random_z_used[i] , images_real.shape[0])
 
             fid = calculate_fid(disc_model, images_fake, images_real)
             fids.append(fid)
@@ -112,11 +123,13 @@ def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch):
         pickle.dump(results_dict, f)
         
     plot_fid_advc(epochs_used, epoch_fids, output)
+    plot_fid(epochs_used, epoch_fids, output)
     
     return (epochs_used, epoch_fids)
 
 
 def plot_fid_advc(epochs_used, epoch_fids, output):
+    plt.clf()
 
     _, ax = plt.subplots(nrows=1, ncols=1, figsize=(3*len(epochs_used), 12))
 
@@ -136,14 +149,35 @@ def plot_fid_advc(epochs_used, epoch_fids, output):
     plt.plot([], [], '-', linewidth=1, color='tab:orange', label='median')
     plt.plot([], [], 'o', linewidth=1, color='k', label='outlier', fillstyle='none')
     plt.legend()
+    
+    plt.tight_layout()
         
-    plt.savefig(path.join(output, 'plot_fids.pdf'), dpi=300)
+    plt.savefig(path.join(output, 'plot_boxplot_fids.pdf'), dpi=300)
+    plt.close()
+
+
+def plot_fid(epochs_used, epoch_fids, output):
+    plt.clf()
+    
+    plt.plot(epochs_used, np.median(epoch_fids, axis=1), label='median')
+    plt.plot(epochs_used, np.mean(epoch_fids, axis=1), label='mean')
+    
+    plt.xlabel('Epoch', fontsize=12)
+    plt.ylabel('Fréchet inception distance', fontsize=12)
+    plt.legend()
+    
+    plt.yscale('log')
+    plt.xticks(epochs_used)
+    plt.tight_layout()
+    
+    plt.savefig(path.join(output, 'plot_line_plot_fids.pdf'), dpi=300)
     plt.close()
 
 
 if __name__ == '__main__':
     # Parse Arguments #
     parser = argparse.ArgumentParser(description='Train GAN to generate landscapes')
+    parser.add_argument('discEpoch', type=int, help='Epoch of discriminator that should be used for FID calculation.')
     parser.add_argument('-b', '--bSize', type=int, dest='bSize', help='Batch Size of images that are used to calculate the FID. Default = 32', default=32)
     parser.add_argument('-d', '--directory', type=str, dest="dirPath", default="training",
                         help="The output directory where the checkpoints and others are saved.")
@@ -155,4 +189,4 @@ if __name__ == '__main__':
     parser.add_argument('-se', '--start', type=int, dest="start", default=1, help="Start at this epoch")
 
     args = parser.parse_args()
-    evaluate_fid(args.dirPath, args.data, args.bSize, args.output, args.stepSize, args.start)
+    evaluate_fid(args.dirPath, args.data, args.bSize, args.output, args.stepSize, args.start, args.discEpoch)
