@@ -6,6 +6,9 @@ import numpy as np
 import glob
 import ntpath
 import argparse
+import os
+import shutil
+
 
 import pickle
 
@@ -52,11 +55,11 @@ def calculate_fid(disc_model, images_fake, images_real):
     return fid
 
 
-# batch_size = number of images that get evaluated
-# step_size = each stepsize time fid will be calculated
-def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch, disc_epoch):
+def init_fid_evaluation(dir_path, dataset, batch_size, output, step_size, start_epoch, disc_epoch):
     
-    model_path_disc = path.join(dir_path, "models", "discriminator")
+    tmp_init_file = path.join(output, "fid_tmp_init.pickle")
+    tmp_init_dict = dict()
+    
     model_path_gen = path.join(dir_path, "models", "generator")
     
     mdls = glob.glob(path.join(model_path_gen, "*.h5"))   
@@ -65,7 +68,6 @@ def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch, 
     epochs_used = [x for x in mdls_existing if x >= start_epoch]
     epochs_used = epochs_used[::step_size]
 
-    epoch_fids = []
     train_ds = get_dataset(dataset, batch_size, image_size)
     
     img_real_used = []
@@ -85,14 +87,74 @@ def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch, 
             
             if i == batches_used-1:
                 break
+    
+    tmp_init_dict = {
+        "epochs_used": epochs_used,
+        "img_real_used": img_real_used,
+        "random_z_used": random_z_used,
+        "batches_used": batches_used,
+        "disc_epoch": disc_epoch
+    } 
+    
+    with open(tmp_init_file, mode='wb')as f:
+        pickle.dump(tmp_init_dict, f)
+        
+    return tmp_init_dict
 
+
+# batch_size = number of images that get evaluated
+# step_size = each stepsize time fid will be calculated
+def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch, disc_epoch, continue_):
+    
+    output = path.join(output, "evaluation")
+    
+    if not continue_ and os.path.exists(output):
+            shutil.rmtree(output)
+
+    if not os.path.exists(output):
+            os.mkdir(output)
+    
+    if not continue_:
+        tmp_init_dict = init_fid_evaluation(dir_path, dataset, batch_size, output, step_size, start_epoch, disc_epoch)
+    else:
+        tmp_init_file = path.join(output, "fid_tmp_init.pickle")
+        tmp_init_dict = dict()
+        with open(tmp_init_file, mode='rb') as f:
+            tmp_init_dict = pickle.load(f)
+            
+    model_path_disc = path.join(dir_path, "models", "discriminator")
+    model_path_gen = path.join(dir_path, "models", "generator")
+    
+    epochs_used = tmp_init_dict.get("epochs_used")
+    img_real_used = tmp_init_dict.get("img_real_used")
+    random_z_used = tmp_init_dict.get("random_z_used")
+    batches_used = tmp_init_dict.get("batches_used")
+    disc_epoch = tmp_init_dict.get("disc_epoch")
+    
     disc_model = tf.keras.models.load_model(path.join(model_path_disc, "disc_model-"+str(disc_epoch)+".h5"))
     disc_model.pop()
     disc_model.pop()
     disc_model.add(tf.keras.layers.AveragePooling2D(pool_size=(8,8)))
     disc_model.add(tf.keras.layers.Flatten())
+
     
-    for i, model in enumerate(epochs_used):
+    tmp_results_file = path.join(output, "fid_tmp_results.pickle")
+    
+    if not continue_ or not path.exists(tmp_results_file):
+        epochs_finished = []
+        epoch_fids = []
+    else:
+        tmp_results_dict = dict()
+        
+        with open(tmp_results_file, mode='rb') as f:
+            tmp_results_dict = pickle.load(f)
+
+        epochs_finished = tmp_results_dict.get("epochs_finished")
+        epoch_fids = tmp_results_dict.get("epoch_fids")
+    
+    epochs_todo = [eps for eps in epochs_used if (eps not in epochs_finished)]
+    
+    for i, model in enumerate(epochs_todo):
         print("\n## Start FID calculation of epoch", model)
         
         gen_model = tf.keras.models.load_model(path.join(model_path_gen, "gen_model-"+str(model)+".h5"))
@@ -110,7 +172,16 @@ def evaluate_fid(dir_path, dataset, batch_size, output, step_size, start_epoch, 
             if i == batches_used-1:
                 break
 
+        epochs_finished.append(model)
         epoch_fids.append(fids)
+        
+        tmp_results_dict = {
+            "epochs_finished": epochs_finished,
+            "epoch_fids": epoch_fids
+        } 
+
+        with open(tmp_results_file, mode='wb')as f:
+            pickle.dump(tmp_results_dict, f)
         
     print("\n\n## Calculation finished.")
     
@@ -187,6 +258,8 @@ if __name__ == '__main__':
                         help="The directory containing subdirectories (labels) with images to use for training.")
     parser.add_argument('-st', '--stepSize', type=int, dest='stepSize', help='Calculate FID for every xth checkpoint', default=1)
     parser.add_argument('-se', '--start', type=int, dest="start", default=1, help="Start at this epoch")
+    parser.add_argument('-ct', '--continue', dest='continue_', action='store_true', default=False,
+                        help="Continue evaluation (default: Start from the beginning)")
 
     args = parser.parse_args()
-    evaluate_fid(args.dirPath, args.data, args.bSize, args.output, args.stepSize, args.start, args.discEpoch)
+    evaluate_fid(args.dirPath, args.data, args.bSize, args.output, args.stepSize, args.start, args.discEpoch, args.continue_)
