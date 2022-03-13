@@ -71,16 +71,3 @@ Dabei ist die Wahl auf den Oxford-IIIT Pet Datensatz~\cite{parkhi12a} gefallen, 
 Um die heruntergeladenen Bilder schlussendlich zum Trainieren zu verwenden, wurde die Keras Methode  \texttt{image\_dataset\_from\_directory} verwendet. Diese kann Bilder direkt aus einem Verzeichnis laden, auf ein Seitenverhältnis und eine Bildgröße zuschneiden und in Batches einteilen. Um den Datensatz zu normalisieren, wurde ein Rescaling-Layer verwendet, welcher die Bilder auf Werte zwischen -1 und 1 abbildet. Um die spätere Lernperformance zu optimieren, wurde der Datensatz zudem gecached und durch \enquote{prefetch} pipelinebar gemacht. Außerdem wird der Datensatz bei jedem Durchgang gemischt, um bessere Lernergebnisse zu erziehen. 
 
 Beim Laden der Hunde und Katzenbilder für das Bildmanipulieren wurde zudem darauf geachtet, dass sowohl die Batches der Hundebilder als auch die der Katzenbilder immer die gleiche Größe haben. 
-
-
-
-
-
-
-
-
-
-
-
-
-
