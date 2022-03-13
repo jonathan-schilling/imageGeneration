@@ -7,10 +7,38 @@
  
  \subsection{Wasserstein-GAN} % Tim
  
- \section{Implementierung} % Jonathan
+  \section{Implementierung} % Jonathan
  
- \subsection{Umsetzung in Tensorflow/Keras}
+ Der folgende Abschnitt thematisiert die Implementierung des zuvor beschriebenen SNDCGAN-Modells in Tensorflow bzw. Keras. Außerdem wird auch die Optimierung der Parameter der Netze behandelt.
  
- \subsection{Parameter Anpassung} % Jonathan
+ \subsection{Umsetzung in Tensorflow/Keras}\label{subsec:imp:sndc}
+ 
+ Ein wichtiger Teil der Implementierung ist die Überführung der in Abschnitt~\ref{subsec:mod:sndc} vorgestellten Architektur des SNDCGANs in ein Tensorflow-Modell. Dafür wird das \glqq Sequential model\grqq\ von Keras~\cite{keras:SequentialModel} verwendet. In dem Modell werden die benötigten Schichten des Generators und des Discriminators definiert. Beim Trainieren wird der Input sequenziell von einer Schicht zur nächsten durchgereicht und adaptiert, daher auch die Namensgebung.  
+ 
+ Nachdem die Architektur des SNDCGANs zu Beginn des Projektes implementiert war, konnten erste Tests durchgeführt werden. Dabei war es ein großes Problem, dass der Fehler des Discriminators schnell auf null ging und damit der Generator keine Chance mehr hatte, irgendetwas zu lernen bzw. zu verbessern, da jeder Versuch als künstliches Bild enttarnt wurde und der Generator somit keine Erfolge mehr verbuchen konnte. Aus diesem Grund wurde die Architektur des Discriminators angepasst und Dropout eingeführt. Dadurch werden bei jedem Trainingsvorgang nur ein Teil der Neuronen trainiert und der Generator bekommt eine Chance, sich gegen den Discriminator durchzusetzen.
+ 
+ Die komplette Implementierung der am Ende verwendeten Architektur beider Modelle ist im Anhang unter \autoref{lst:sndcGenerator} und \ref{lst:sndcDiscriminator} zu finden.
+ 
+ Weiter wird für das Trainieren des SNDCGANs eine Trainingsschleife benötigt. Die in diesem Fall verwendete Schleife wurde zunächst aus \cite{raschka2019} übernommen und im Folgenden an die Bedürfnisse des Projektes angepasst. Um die Gradienten für ein anschließendes Gradientenabstiegsverfahren zu berechnen, werden GradientTapes von Tensorflow~\cite{tf:gradientape} eingesetzt. Diese speichern alle Operationen, die bei der Ausführung des zu trainierenden Netzes durchgeführt werden und können daraus dann die Gradienten berechnen~\cite{tf:autodiff}.
+ 
+ Um die neuronalen Netze zu optimieren, wird der Adam Algorithmus eingesetzt. Dieser führt einen Gradientenabstieg durch und wird bereits von Tensorflow zur Verfügung gestellt~\cite{tf:adam}. Als Besonderheit bringt Adam u. a. eine über die Zeit abnehmende Lernrate mit~\cite{kingma2014}.
+ 
+ Ein weiterer wichtiger Teil der Implementierung ist die Möglichkeit, das Training zu pausieren und später wieder an gleicher Stelle aufzunehmen. Dies war vor allem wichtig, da die Rechenkapazitäten für dieses Projekt sehr begrenzt waren, somit das Trainieren viel Zeit in Anspruch genommen hat und das Training dabei nicht an einem Stück durchgeführt werden konnte. Deshalb wurde implementiert, dass in regelmäßigen Abständen Checkpoints des Lernfortschritts gespeichert werden. Diese Umfassen neben den Modellen des Generators und Discriminators auch deren Optimizer. Dies ist wichtig, da wie zuvor erwähnt wurde, die Lernrate der Adam Optimizer über die Zeit abnimmt. Somit ist nur eine Fortsetzung des Trainings beim gleichen Stand möglich, wenn auch die bisher verwendeten Optimizer geladen werden. 
+ 
+ Zunächst war geplant, dass diese Checkpoints dauerhaft gespeichert werden, damit die trainierten Netzwerke später ausgewertet und verwendet werden können. Bei Testläufen hat sich allerdings herausgestellt, dass jeder Checkpoint fast 600 MB umfasst und dies sich dann über die ganzen Epochen zu einem großen Speicherverbrauch aufsummiert. Deshalb wurde zusätzlich eingeführt, dass die trainierten Modelle einzeln gespeichert werden und von den Checkpoints nur noch die letzten zwei erhalten bleiben. Dadurch konnte der Speicherplatz pro gespeicherter Epoche um zweidrittel reduziert werden.
+ 
+ \subsection{Anpassung von Parametern} % Jonathan
+ 
+ Eine große Herausforderung in diesem Projekt war die richtige Wahl der Parameter für das Training, sodass das neuronale Netz möglichst gut initialisiert wird, um dann gute Ergebnisse zu produzieren. Dabei war das Hauptproblem die fehlende Rechenkapazität, um verschiedene Konfigurationen ausführlich auszutesten, anschließend mit einer wissenschaftlichen Herangehensweise zu vergleichen und daraus die besten Parameter abzuleiten. Aus diesem Grund mussten die Entscheidungen auf Basis weniger Versuche getroffen werden. Daher ist es mit Sicherheit möglich, anhand einer ausführlicheren Analyse besser passende Parameter zu finden.
+ 
+ Im Folgenden werden die vier Variablen \emph{Droprate}, \emph{initiale Lernrate}, \emph{Bildermenge} und \emph{Auflösung der Bilder} genauer thematisiert.
+ 
+ Wie im vorherigen Abschnitt~\ref{subsec:imp:sndc} bereits erwähnt wurde, war es zu Beginn des Projektes ein großes Problem, dass der Fehler des Discriminators nach kurzer Zeit auf null ging und damit einen Lernfortschritt des Generators unmöglich machte. Neben der Einführung des Dropouts, war auch die Anpassung der initialen Lernrate auf der Seite des Discriminators wie auch auf der des Generators eine wichtige Stellschraube. Während es bei der Droprate auf Basis eines Blogbeitrags~\cite{brownlee2019} relativ schnell möglich war, einen Wert von 50 \% festzulegen, mussten bei der Lernrate einige Testläufe absolviert werden. 
+ 
+ Die zu Beginn gewählten Lernraten bewegten sich in der Größenordnung von E-3 und mit ihnen trat das Verschwinden des Discriminator-Fehlers auf. Eine Vergrößerung der Lernrate wirkte sich deutlich negativ auf das Lernverhalten aus, da der Fehler des Discriminators noch schnell zu null ging. Als dritten Ansatz wurden unterschiedliche Lernraten für Generator und Discriminator getestet. Dabei wurde die des Generators im Bereich von E-3 deutlich größer gewählt als die des Discriminators mit E-4. Das Ziel war, den Generator schneller lernen zu lassen, als den Discriminator. Allerdings waren die Ergebnisse damit auch noch nicht zufriedenstellend. Erst ein Reduzieren beider Lernraten in den Bereich von E-4 hat für sichtbare Veränderungen bei den produzierten Beispielbildern gesorgt.
+ 
+ Um den Trainingsprozess bei diesen Versuchen zu beschleunigen, wurde immer nur mit relativ wenig Bildern gelernt. Erst nachdem die ersten Erfolge durch eine bessere Wahl der initialen Lernrate sichtbar wurden, erhöhte sich die Bildermenge auf zunächst ca. 1.500 Stück und später dann auf etwas mehr als 7.000, was auch eine weitere Verbesserung der Ergebnisse mit sich brachte. Allerdings beschränkten sich die Verbesserung auf sichtbare Änderungen in den abgebildeten Formen, die zunehmend komplexer wurden. Die erstellten Bilder hatten jedoch noch wenig Ähnlichkeit zu (schlecht aufgelösten) Landschaftsbildern.
+ 
+ Die letzte Änderung, die anschließend zu zufriedenstellenden Ergebnissen geführt hat, war eine Vergrößerung der Auflösung. Das bis dahin mit einer Bilderauflösung von 128x72 Pixeln trainierte SNDCGAN wurde auf 256x144 Pixel vergrößert. Dies bedeutete zwar einen deutlich Anstieg der Rechenzeit, allerdings war damit in den Beispielbildern mehr Inhalt zu erkennen, den das GAN lernen konnte.
  
  \section{Evaluierung} % TODO Jonathan, Dani
