@@ -32,6 +32,7 @@ DIV=9,
 }
 \bibliography{bibliography}
 \bibliography{Neuroprojekt}
+\bibliography{joshuaBib}
 \renewcommand*{\bibfont}{\small}
 
 \usepackage{tikz}
@@ -61,6 +62,7 @@ DIV=9,
 \titleformat{\chapter}[display]{\filleft\Huge\bfseries}{\vspace*{-5cm}\fontsize{100}{100}\selectfont\textcolor{grayChapt}\thechapter}{-1.9ex}{}[]%
 \titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}[.]
 
 \newtheorem{definition}{Definition}
 
@@ -137,6 +139,7 @@ DIV=9,
 \definecolor{todoCont}{HTML}{B483C9}%Inhalte
 
 \usepackage[hyperfootnotes=false]{hyperref}
+\usepackage[ngerman, noabbrev]{cleveref}
 \usepackage[multiple]{footmisc}
 \usepackage[all]{hypcap}
 \hypersetup{

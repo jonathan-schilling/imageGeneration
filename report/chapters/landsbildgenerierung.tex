@@ -1,9 +1,169 @@
  \chapter{Generierung von Landschaftsbildern}\label{chp:bildgenerierung} % 10 Seiten
  \glsresetall
+
+ Der erste Teil des vorliegenden Projektes beschäftigt sich mit dem Generieren von neuen Landschaftsbildern aus Zufallsvektoren. Dazu wird das Konzept der in \cref{GANs} beschriebenen \gls{acr-GAN} verwendet.
  
  \section{Modelle}% Joshua
+
+ Wie in \cref{GANs} beschreiben, gibt es im Bereich der \gls{acr-GAN}s zahlreiche
+ Varianten und Anpassungen, die versuchen verschiedene Schwachstellen des
+ Konzeptes auszugleichen. Um dieser Vielzahl von Möglichkeiten zu begegnen,
+ wurden in diesem Projekt zwei weit verbreitete \cite[S. 3]{kurach2018gan} GAN-Architekturen umgesetzt, das \emph{\gls{acr-DCGAN}} \cite{radford2015unsupervised} zusammen mit dessen
+ Erweiterung zum \emph{\gls{acr-SNDCGAN}} \cite{miyato2018spectral}, sowie das
+ \emph{\gls{acr-WGAN}} \cite{arjovsky2017wasserstein}. Dies Erlaubt einen Vergleich der
+ Vorgehensweisen und der Ergebnisse, siehe dazu \cref{evalGen}. % TODO: Ist das so?
  
- \subsection{SNDCGAN} % Joshua
+\subsection{SNDCGAN} % Joshua
+
+Das erste im Projekt umgesetzte \gls{acr-GAN} Modell, ist das \gls{acr-SNDCGAN}
+genannte Modell, welches in dieser Form aus dem Übersichts-Paper
+\citetitle{kurach2018gan} von \citeauthor{kurach2018gan} \cite{kurach2018gan}
+übernommen ist. Dieses Modell ist eine Erweiterung des im Paper
+\citetitle{radford2015unsupervised} von \citeauthor{radford2015unsupervised} \cite{radford2015unsupervised}
+vorgestellten \gls{acr-DCGAN}s um die Änderungen des SN-GANs aus
+\citetitle{miyato2018spectral} von \citeauthor{miyato2018spectral}
+\cite{miyato2018spectral}.
+Dies wird im Projekt durch die Standard-Kostenfunktion des ursprünglichen
+\gls{acr-GAN}s \cite{goodfellow2014generative}, sowie einem leicht angepassten
+Trainingsprozedere ergänzt.
+
+\paragraph{\gls{acr-DCGAN}} Die Idee des \gls{acr-DCGAN} von
+\citeauthor{radford2015unsupervised} \cite{radford2015unsupervised} ist es die
+ursprünglich \cite[vgl.][]{goodfellow2014generative} auf vollständig verbundenen
+Schichten (\emph{fully connected} bzw. \emph{Multilayer Perceptron (MLP)})
+basierende \gls{acr-GAN} Architektur mit dem speziell für Bildverarbeitung
+attraktiven \gls{acr-CNN} zu verbinden \cite[S. 1]{radford2015unsupervised}.
+Dabei nutzt das \gls{acr-DCGAN} bestimmte (zu der Zeit) aktuelle Entwicklungen
+der \gls{acr-CNN}s \cite[vgl.][S. 3]{radford2015unsupervised}: Auf deterministische Pooling-Funktionen wird zugunsten von
+\emph{strided Convolutions} (d.\,h. Convolutions bei denen der Kernel um mehr als eins pro
+Schritt bewegt wird) verzichtet; es werden bewusst gar keine (versteckten)
+vollständig verbunden Schichten verwendet; es wird Batch-Normalisierung (d.\,h.
+das Normalisieren der Eingabe zu einem Mittelwert von null und einer Varianz von
+eins) auf die meisten Schichten angewandt und es wird \emph{ReLU} als
+Aktivierungsfunktion (bis auf die Ausgabeschicht, die tanh verwendet) für den
+Generator bzw. 
+\emph{Leakey ReLU} für den Discriminator verwendet.
+\gls{acr-DCGAN} beansprucht für sich, vor allem durch diese Änderungen, das
+Training im Vergleich zu anderen Ansätzen stabilisieren zu können \cite[S.
+9]{radford2015unsupervised}.
+
+\paragraph{\gls{acr-SNDCGAN}} Das Paper \citetitle{miyato2018spectral}
+\cite{miyato2018spectral} führt hauptsächlich eine neue
+Gewichtsnormalisierungs-Technik ein, die aber für die Pro\-jekt-Imp\-le\-men\-tier\-ung
+hier nicht relevant ist. Allerdings führt das Paper auch einige geringe
+Änderungen an der Architektur des \gls{acr-DCGAN}s ein, die für die Architektur
+des Projektes übernommen wurde. Dazu gehört hauptsächlich die Nutzung eines
+acht-schichtigen Discriminators \cite[S. 3]{kurach2018gan}. Dies wird von
+\citeauthor{kurach2018gan} \cite{kurach2018gan} als \gls{acr-SNDCGAN}
+bezeichnet. Das \gls{acr-SNDCGAN} beansprucht für sich vor allem diversere
+Datenpunkte zu erzeugen (d.\,h. den Zufall des Zufallsvektors besser umzusetzen)
+und einen besseren \gls{acr-IS} (eine Metrik für das Beurteilen von
+\gls{acr-GAN}s) zu erreichen \cite[S. 11]{miyato2018spectral}.
+
+\paragraph{Architektur} Die Architektur des \gls{acr-SNDCGAN}s, so wie es in
+diesem Projekt umgesetzt wird, stammt aus \citetitle{kurach2018gan}
+\cite{kurach2018gan} und ist in \cref{tab:sndcgan} beschrieben. Dabei sieht man,
+wie im Discriminator das Bild über Convolutions schrittweise verkleinert wird,
+gleichzeitig aber mehr Kanäle, d.\,h. mehr Informationen über das Bild
+hinzukommen. Der Generator andererseits verwendet
+Deconvolutions\footnote{Korrekterweise handelt es sich hierbei eigentlich um
+\emph{Transposed Convolutions} auch \emph{Fractionally Strided Convolutions}
+genannt, nicht um Deconvolutions (d.\,h. die mathematische Umkehrung der
+Convolution) im engeren Sinne; allerdings wird in der Literatur häufig dennoch
+von Convolutions gesprochen, was hier übernommen wurde \cites[vgl.][S.
+20]{dumoulin2016guide}[vgl.][S. 4]{radford2015unsupervised}.} um aus dem
+eindimensionalen Zufallsvektor schrittweise ein Farbbild zu erzeugen.
+
+\paragraph{Kostenfunktion} Als Kostenfunktion wird für die Projekt-Implementierung entsprechend des
+\gls{acr-SNDCGAN} Papers die ursprüngliche Standard-Kostenfunktion aus dem Paper von
+\citeauthor{goodfellow2014generative} \cite{goodfellow2014generative} verwendet. Diese ist
+gegeben als $V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}(x)} [\log D(x)] +
+\mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$ \cite[S.
+3]{goodfellow2014generative}. Dabei wird davon ausgegangen, dass der
+Discriminator $D$ eine $1$ ausgibt, wenn er der Ansicht ist, dass das
+eingegebene Bild sicher ein original Bild der Daten ist. Damit ist das Ziel des
+Discriminators $V(D,G)$ zu maximieren, während der Generator die Funktion
+minimieren möchte: $\min_{G} \max_{D} V(D,G)$. In der Praxis des Projektes wird,
+ebenfalls dem \gls{acr-SNDCGAN} und \gls{acr-GAN} Papern folgend \cites[S.
+3]{goodfellow2014generative}[S. 6]{miyato2018spectral}, statt der Minimierung
+von $\log(1-D(G(z)))$, $\log D(G(z))$ maximiert, dies verringert das Problem von
+verschwindenden Gradienten im frühen Training.
+
+\paragraph{Training} Das Training der Projekt Implementierung folgt im
+wesentlichen dem von \citeauthor{goodfellow2014generative}
+\cite{goodfellow2014generative}. Der Generator und Discriminator werden jeweils
+abwechselnd trainiert, wobei zuerst der Generator eine Batch von Beispiel-Daten
+erzeugt, die anschließend vom Discriminator bewertet werden. Dies wird zuerst
+für die Kosten des Generators verwendet und anschließend, zusammen mit einer
+Bewertung von Originaldaten durch den Discriminator, für das Training des
+Discriminators. Den Lernverfahren der einbezogenen Paper
+\cite{radford2015unsupervised,miyato2018spectral,kurach2018gan} folgend,
+verwendet die Implementierung des
+Projektes den Adam-Optimizer \cite{kingma2014adam}.
+
+\begin{table}[]
+  \caption{SNDCGAN Architektur}
+  \label{tab:sndcgan}
+  \begin{center}
+    \begin{minipage}{.5\linewidth}
+      \caption{SNDCGAN Discriminator}
+      \centering
+        \begin{tabular}{lcl}
+            \toprule
+            Schicht & Kernel & Ausgabe\\
+            \toprule
+            Conv, lReLU & $[3,3,1]$ & $h \times w \times 64$\\
+            \midrule
+            Conv, lReLU & $[4,4,2]$ & $h/2 \times w/2 \times 128$\\
+            \midrule
+            Conv, lReLU & $[3,3,1]$ & $h/2 \times w/2 \times 128$\\
+            \midrule
+            Conv, lReLU & $[4,4,2]$ & $h/4 \times w/4 \times 256$\\
+            \midrule
+            Conv, lReLU & $[3,3,1]$ & $h/4 \times w/4 \times 256$\\
+            \midrule
+            Conv, lReLU & $[4,4,2]$ & $h/8 \times w/8 \times 512$\\
+            \midrule
+            Conv, lReLU & $[3,3,1]$ & $h/8 \times w/8 \times 512$\\
+            \midrule
+            Linear & - & $1$\\
+            \bottomrule
+        \end{tabular}
+    \end{minipage}%
+    \begin{minipage}{.5\linewidth}
+      \centering
+        \caption{SNDCGAN Generator}
+        \begin{tabular}{lcl}
+            \toprule
+            Schicht & Kernel & Ausgabe\\
+            \toprule
+            $z$ & - & $128$\\
+            \midrule
+            Linear, BN, ReLU & - & $h/8 \times w/8 \times 512$\\
+            \midrule
+            Deconv, BN, ReLU & $[4,4,2]$ & $h/4 \times w/4 \times 256$\\
+            \midrule
+            Deconv, BN, ReLU & $[4,4,2]$ & $h/2 \times w/2 \times 128$\\
+            \midrule
+            Deconv, BN, ReLU & $[4,4,2]$ & $h \times w \times 64$\\
+            \midrule
+            Deconv, Tanh & $[3,3,1]$ & $h \times w \times 3$\\
+            \bottomrule
+        \end{tabular}
+    \end{minipage} 
+  \end{center}
+  \begin{center}
+    \bigskip
+    \emph{Quelle:} Von \cite[S. 12]{kurach2018gan} übernommen.\\
+    \emph{Legende:} Der Kernel ist beschrieben im Format
+    $[\text{x\_Größe}, \text{y\_Größe}, \text{Schrittweite}]$;
+    $h$ und $w$ beschreiben die Höhe bzw.
+    Breite des Eingabe-Bildes in Pixeln; damit beschreibt die Ausgabe
+    $\text{Höhe} \times \text{Breite} \times \text{Kanäle}$
+    , wobei das Eingabe-Bild als
+    farbiges Bild drei Kanäle hat.
+  \end{center}
+\end{table}
  
  \subsection{Wasserstein-GAN} % Tim
  
@@ -41,4 +201,4 @@
  
  Die letzte Änderung, die anschließend zu zufriedenstellenden Ergebnissen geführt hat, war eine Vergrößerung der Auflösung. Das bis dahin mit einer Bilderauflösung von 128x72 Pixeln trainierte SNDCGAN wurde auf 256x144 Pixel vergrößert. Dies bedeutete zwar einen deutlich Anstieg der Rechenzeit, allerdings war damit in den Beispielbildern mehr Inhalt zu erkennen, den das GAN lernen konnte.
  
- \section{Evaluierung} % TODO Jonathan, Dani
+ \section{Evaluierung}\label{evalGen} % TODO Jonathan, Dani
