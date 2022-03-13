@@ -14,6 +14,7 @@
  Vorgehensweisen und der Ergebnisse, siehe dazu \cref{evalGen}. % TODO: Ist das so?
  
 \subsection{SNDCGAN} % Joshua
+\label{sub:sndcgan}
 
 Das erste im Projekt umgesetzte \gls{acr-GAN} Modell, ist das \gls{acr-SNDCGAN}
 genannte Modell, welches in dieser Form aus dem Übersichts-Paper
@@ -166,6 +167,19 @@ Projektes den Adam-Optimizer \cite{kingma2014adam}.
 \end{table}
  
  \subsection{Wasserstein-GAN} % Tim
+ Das \gls{acr-WGAN} wurde 2017 in \citetitle{arjovsky_wasserstein_2017} \cite{arjovsky_wasserstein_2017} vorgestellt. Dabei verwendet dieses einen alternativen Weg um den Generator zu trainieren, welcher die Datenverteilung der gegebenen Trainingsdaten besser approximieren soll. Anstatt einen Discriminator zu verwenden, der Bilder in real oder nicht real kategorisiert, verwendet das \gls{acr-WGAN} einen einen \enquote{critic}, welcher durch einen linearen Wert Bilder nach ihrem Realismus bewertet. 
+ 
+ Für die Aufgebe Landschaftsbilder zu generieren wurde ebenfalls ein \gls{acr-WGAN} implementiert. Aufgrund fehlender Trainingsressourcen konnte diese Implementation jedoch nicht optimiert werden und liefert deutlich schlechtere Ergebnisse als die \gls{acr-SNDCGAN} Implementierung. Dennoch ist das \gls{acr-WGAN} eine interessante Möglichkeit ein Generator zu erschaffen.  
+ 
+ \paragraph{Architektur} Die in diesem Projekt verwendete Architektur des \gls{acr-WGAN}s orientiert sich an der des \gls{acr-SNDCGAN}s, beschrieben in \cref{sub:sndcgan}. Allerdings wurden weniger Convolutions verwendet um Ressourcen zu sparen, da die Architektur noch nicht optimiert wurde. Anstatt Deconvolutions zu verwenden benutzt der critic ebenfalls Convolutions, und fügt diese am Ende zu einem linearen Output zusammen \cite{brownlee_how_2019-1}. Außerdem werden die Gewichte im critic zwischen -0.01 und 0.01 beschränkt \cite{arjovsky_wasserstein_2017}. 
+ 
+ \paragraph{Kostenfunktion} Das \gls{acr-WGAN} verwendet das Wasserstein loss, welches versucht den Abstand zwischen realen und generierten Bildern zu maximieren. Dabei können die Kostenfunktionen nach \cite{brownlee_how_2019} folgendermaßen definiert werden:
+ \begin{itemize}
+ 	\item Critic Loss = [Durchschnittlicher critic Wert auf realen Bildern] – [Durchschnittlicher critic Wert auf generierten Bildern]
+ 	\item Generator Loss = -[Durchschnittlicher critic Wert auf generierten Bildern]
+ \end{itemize}
+
+\paragraph{Training} Einer der großen Vorteile des \gls{acr-WGAN} ist, dass es keinen Discriminator gibt, der dem Generator \enquote{davonläuft}. Ein besserer critic sorgt für bessere Ergebnisse \cite[S. 8]{arjovsky_wasserstein_2017}. Deshalb wird beim Training der critic mehr trainiert, als der Generator, in diesem Fall fünf mal so oft. Zudem wird RMSProp statt Adam als Optimizer verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  
   \section{Implementierung} % Jonathan
  
