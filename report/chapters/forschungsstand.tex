@@ -31,7 +31,7 @@ nur eine Näherung ausgibt.
 Eine häufige Umsetzung benutzt eine Kodierung $h$,
 die eine deutlich geringere Dimensionalität hat als die Eingabe/Ausgabe. Damit
 bildet $h$ – bzw. die entsprechende versteckte Schicht – ein Bottleneck, durch das
-die Information »fließen« muss \cites[S.503]{goodfellow2016deep}[S. 620f.]{raschka2019}. Da das Netz dadurch keine simple
+die Information \enquote{fließen} muss \cites[S.503]{goodfellow2016deep}[S. 620f.]{raschka2019}. Da das Netz dadurch keine simple
 Identitätsfunktion lernen kann, muss es gewisse Eigenschaften der Eingabe
 priorisieren, die es beibehält, um die Daten möglichst gut rekonstruieren zu können.
 Davon erhofft man sich, dass das Netz nützliche Eigenschaften und
@@ -96,19 +96,19 @@ trainieren dabei den Discriminator häufiger als den Generator \cite[S.
 Die grundlegende Idee von \gls{acr-GAN}s wurde inzwischen für zahlreiche
 Anwendungen adaptiert. Diese reichen vom einfachen Generieren von Bildern
 \cite{goodfellow2014generative, arjovsky2017wasserstein,
-gulrajani2017improved,kurach2018gan, miyato2018spectral} über das »Übersetzen«
+gulrajani2017improved,kurach2018gan, miyato2018spectral} über das \enquote{Übersetzen}
 von Bildern in einen anderen Stil
 \cite{pang2021image,isola2017image,zhu2017unpaired,
 liu2019few,saito2020coco,anokhin2020high} und das Erzeugen von
 \emph{super-resolution} Bildern, d.\,h. das Verbessern der Auflösung von Bildern
 \cite{pang2021image,anokhin2020high,ledig2017photo}, bis hin zu
-\emph{Inpainting}, d.\,h. dem »Auffüllen« von fehlenden Teilen eines Bildes
+\emph{Inpainting}, d.\,h. dem \enquote{Auffüllen} von fehlenden Teilen eines Bildes
 \cite{pang2021image,isola2017image, demir2018patch}.
 
 Trotz dieser zahlreichen Anwendungen, sind \gls{acr-GAN}s sehr schwierig zu
 trainieren \cite[S. 1]{kurach2018gan}. Für jede Anwendung muss viel Aufwand in
 \emph{Hyperparameter-Tuning}, die Anpassung der neuronalen Architektur und
-zahlreiche andere »Tricks« \cite[vgl.][]{kurach2018gan} gesteckt werden. Dies
+zahlreiche andere \enquote{Tricks} \cite[vgl.][]{kurach2018gan} gesteckt werden. Dies
 liegt daran, dass das Trainieren von \gls{acr-GAN}s einer
 Minimax-Aufgabe auf einer Vielzahl von Parametern entspricht, die nur sehr
 schwer zu lösen ist \cite[S. 1]{kurach2018gan}. In der Praxis führt dies häufig
@@ -134,13 +134,13 @@ von Datenpunkten, wie z.\,B. Bildern, verwendet werden, sondern auch zu deren
 Manipulation (vor allem von Bildern). Dies wird als \emph{\gls{acr-I2I}}
 bezeichnet. Das Ziel ist es hierbei ein Bild (d.\,h. den Stil) von einer Domäne
 $A$ in eine Domäne $B$ umzuwandeln, wobei der Inhalt des Bildes erhalten bleibt
-\cite[S. 1]{pang2021image}. Dabei bezeichnet der »Stil«, der verändert wird,
+\cite[S. 1]{pang2021image}. Dabei bezeichnet der \enquote{Stil}, der verändert wird,
 nicht nur einen Bildstil im engeren Sinne, sondern es können z.\,B. auch Bilder
 von Hunden in Bilder von Katzen umgewandelt werden \cite{liu2019few}.
-Die Anwendungsmöglichkeiten sind ebenso vielfältig wie für die »normalen«
+Die Anwendungsmöglichkeiten sind ebenso vielfältig wie für die \enquote{normalen}
 \gls{acr-GAN}s \cite[vgl.][S. 1]{pang2021image}.
 
-Der Unterschied zu den »normalen« \gls{acr-GAN}s ist nun, dass der Generator
+Der Unterschied zu den \enquote{normalen} \gls{acr-GAN}s ist nun, dass der Generator
 nicht (nur) einen Zufallsvektor als Eingabe erhält, sondern das umzuwandelnde
 Bild \cite[S. 1]{pang2021image}. Der Discriminator wird ebenfalls angepasst, z.\,B. erhält er als
 zusätzliche Eingabe ebenfalls das ursprüngliche Bild um die Erhaltung des
