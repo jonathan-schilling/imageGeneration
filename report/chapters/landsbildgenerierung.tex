@@ -188,9 +188,8 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
  \paragraph{Architektur} Die in diesem Projekt verwendete Architektur des
  \gls{acr-WGAN}s orientiert sich an der des \gls{acr-SNDCGAN}s, beschrieben in
  \cref{sub:sndcgan}. Allerdings wurden weniger Convolutions verwendet um
- Ressourcen zu sparen, da die Architektur noch nicht optimiert wurde. Anstatt
- Deconvolutions zu verwenden benutzt der critic ebenfalls Convolutions, und fügt
- diese am Ende zu einem linearen Output zusammen \cite{brownlee_how_2019-1}.
+ Ressourcen zu sparen, da die Architektur noch nicht optimiert wurde. Der Critic
+ verwendet ebenfalls Convolutions, und fügt diese am Ende zu einem linearen Output zusammen \cite{brownlee_how_2019-1}.
  Außerdem werden die Gewichte im critic zwischen -0.01 und 0.01 beschränkt
  \cite{arjovsky_wasserstein_2017}. 
  
