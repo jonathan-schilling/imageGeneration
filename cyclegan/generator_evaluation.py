@@ -1,7 +1,7 @@
 # lower score means more similarity between real and generated images
 import pathlib
 import tensorflow as tf
-from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications import VGG16
 from tensorflow.keras import Model
 from tensorflow.keras.layers import AveragePooling2D, Flatten
 from tensorflow.python.keras.layers import Rescaling
@@ -35,24 +35,14 @@ max_batches = 16
 tf.get_logger().setLevel('ERROR')
 
 
-# form https://machinelearningmastery.com/how-to-implement-the-frechet-inception-distance-fid-from-scratch/ accessed on 27.02.2022
-# calculate frechet inception distance
-def calculate_fid(model, image_input, image_output):
-    act_input = model.predict(np.array([image_input]))
-    act_output = model.predict(np.array([image_output]))
-    mu_input = np.atleast_1d(np.mean(act_input))
-    mu_output = np.atleast_1d(np.mean(act_output))
-    cov_input = np.atleast_2d(np.cov(act_input, rowvar=False))
-    cov_output = np.atleast_2d(np.cov(act_output, rowvar=False))
-    ssdiff = mu_input - mu_output
+def calculate_pd(model, image_input, image_output):
+    act_output = model.predict(np.array([image_output])).numpy()
+    act_input = model.predict(np.array([image_input])).numpy()
 
-    covmean = sqrtm(np.dot(cov_input, cov_output))
-
-    if np.iscomplexobj(covmean):
-        covmean = covmean.output
-
-    fid = ssdiff + np.trace(cov_input + cov_output - 2.0 * covmean)
-    return fid[0]
+    difference = np.subtract(act_output, act_input)
+    euclid = np.sum(np.square(difference))
+    normalized = (1/np.prod(act_output.shape)) * euclid
+    return normalized
 
 
 def scale_images(images, new_shape):
@@ -99,7 +89,7 @@ def plot_fid_advc(epochs_used, epoch_fids, output):
     ax.set_yscale('log')
 
     ax.set_xlabel('Epoch', fontsize=14)
-    ax.set_ylabel('Fréchet inception distance', fontsize=14)
+    ax.set_ylabel('Perception Distance', fontsize=14)
 
     plt.plot([], [], '--', linewidth=1, color='tab:green', label='mean')
     plt.plot([], [], '-', linewidth=1, color='tab:orange', label='median')
@@ -119,7 +109,7 @@ def plot_fid(epochs_used, epoch_fids, output):
     plt.plot(epochs_used, np.mean(epoch_fids, axis=1), label='mean')
 
     plt.xlabel('Epoch', fontsize=12)
-    plt.ylabel('Fréchet inception distance', fontsize=12)
+    plt.ylabel('Perception Distance', fontsize=12)
     plt.legend()
 
     plt.yscale('log')
@@ -130,11 +120,9 @@ def plot_fid(epochs_used, epoch_fids, output):
     plt.close()
 
 
-def main(path_, generators_path, sample_size, output, generator_image_dim=(128, 128, 3), image_dim=(299, 299, 3)):
-    inception_v3 = InceptionV3(include_top=True, pooling='avg', input_shape=(299, 299, 3))
-    inception_output = AveragePooling2D(pool_size=(71, 71))(inception_v3.layers[16].output)
-    inception_output = Flatten()(inception_output)
-    inception_v3 = Model(inputs=inception_v3.input, outputs=[inception_output])
+def main(path_, generators_path, sample_size, output, generator_image_dim=(128, 128, 3), image_dim=(224, 224, 3)):
+    vgg_16 = VGG16(weights='imagenet', include_top=True)
+    vgg_16 = Model(inputs=vgg_16.input, outputs=[vgg_16.layers[15].output])
     data = next(iter(get_dataset(path_, sample_size, generator_image_dim)))
     epochs = []
     fids = []
@@ -146,7 +134,7 @@ def main(path_, generators_path, sample_size, output, generator_image_dim=(128, 
         samples = generate_samples(generator_model, os.path.join(generators_path, file), sample_size, data, image_dim)
         current_fids = []
         for input_img, output_img in samples:
-            current_fids.append(calculate_fid(inception_v3, input_img, output_img))
+            current_fids.append(calculate_pd(vgg_16, input_img, output_img))
         fids.append(current_fids)
     plot_fid_advc(epochs, fids, output)
     plot_fid(epochs, fids, output)
