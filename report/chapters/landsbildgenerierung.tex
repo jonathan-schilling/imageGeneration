@@ -216,4 +216,39 @@ Projektes den Adam-Optimizer \cite{kingma2014adam}.
  
  Die letzte Änderung, die anschließend zu zufriedenstellenden Ergebnissen geführt hat, war eine Vergrößerung der Auflösung. Das bis dahin mit einer Bilderauflösung von 128x72 Pixeln trainierte SNDCGAN wurde auf 256x144 Pixel vergrößert. Dies bedeutete zwar einen deutlich Anstieg der Rechenzeit, allerdings war damit in den Beispielbildern mehr Inhalt zu erkennen, den das GAN lernen konnte.
  
- \section{Evaluierung}\label{evalGen} % TODO Jonathan, Dani
+ \section{Evaluierung}\label{evalGen} 
+  Nachdem das Training des implementierten GANs erfolgreich abgeschlossen wurde, erfolgt die Evaluation der Ergebnisse. Dafür wurden zwei verschieden Methoden genutzt. Die Erste betrachtet den durchschnittlichen Loss des Generators und Diskriminators, zu sehen in Abbildung \ref{fig:plot_losses_gen}.  Hier ist zu erkennen das zu Beginn Spitzen von Großen Losses auftreten, diese sich aber im Verlauf zu späteren Epochen auspendeln, und zu eine Minimum tendiert.
+ Daraus kann gefolgert werden, dass die Netze ihre Aufgabe erfüllen, nämlich die Losse beider Netze zu minimieren.
+ In den letzten hundert Epochen ist eine steigende Tendenz zu beobachten, die auf das overfitting zurück geführt werden kann.
+ 
+ 
+ 
+ 
+ \begin{figure}[t]
+ 	\centering
+ 	\includegraphics[width=0.7\linewidth]{images/plot_line_plot_losses_gen}
+ 	\caption[Losses des generirenden GANs]{Der Loss über alle Epochen des GANs , welches für das generieren von Landschaftsbilder genutzt wurde.}
+ 	\label{fig:plot_losses_gen}
+ \end{figure}
+ 
+ Die zweite Methode ist das berechnen der \acrfull{acr-FID}, diese bestimmt die Ähnlichkeit der echten und der generierten Bilder \cite{heusel_gans_2017}. Dies wird über die Fr\'echet Distance gemacht, welche die Gaußglocken der Verteilungen beider Domänen vergleicht. Die Gaußglocke wird über den Mittelwert $m$ und die Kovarianz $C$ festgelegt. 
+ 
+ \[d^2((m,C),(m_w,C_w)) =  \|m-m_w\|^2_2 + trace(C+ C_w - 2(CC_w)^{\frac{1}{2}})  \]
+ 
+ Die in dieser Arbeit umgesetzte Implementierung von \gls{acr-FID} geht über alle gespeicherten Modelle des Generator (hier jede fünfte Epoche). Mit diesen werden  
+ mittels über alle Epochen gleichbleibenden Zufallsvektoren Bilder generiert. Diese Bilder werden nun mit einer zufälligen aber festen Auswahl an echten Bilder verglichen, in dem alle Bilder durch den beste Diskriminator bewertet werden. Beim Diskriminator müssen die letzten beiden Schichten entfernt werden und durch eine Pooling-Schicht mit anschließendem Abflachen ersetzt werden, damit die Berechnung der Mittelwerte und Kovarianzen durchgeführt werden kann. 
+ 
+ Die Auswertung des genutzten Modells unter Verwendung des Diskriminators mit geringsten Losses sind in Abbildung \ref{fig:plot_fids_gen} sichtbar. Über die Approximation ist klar zu erkennen, dass der Wert im Laufe der Zeit fallend ist, was eine Annäherung der generierten Bilder zu den echten Bilder widerspiegelt. Genau diese Eigenschaft ist bei der Generierung mittels GANs gewünscht.
+ 
+ \begin{figure}
+ 	\centering
+ 	\includegraphics[width=0.7\linewidth]{images/plot_line_plot_fids_gen}
+ 	\caption[FID des generierdene GANs]{FID über alle Epochen mit dem Diskriminator aus Epoche 535}
+ 	\label{fig:plot_fids_gen}
+ \end{figure}
+ 
+ Das Fazit aus den beiden Evaluierungsmethoden ist, dass das in dieser Arbeit implementierte und trainierte GAN die Aufgabe des Generieren von Landschaftsbilder gut umgesetzt hat. Denn der Loss des gesamten Netzes pendelt sich auf feste Werte ein, bei dem es sich um das Minimum handelt.
+ Sowie die Ergebnisse der \gls{acr-FID} zeigen das die generierten Bilder relativ ähnlich zu echten Bilder sind, wodurch die generierten Bilder für den Menschen als echten Landschaftsbild gesehen wird.
+ %TODO: Bilder vergleich zeigen?
+ 
+ 
