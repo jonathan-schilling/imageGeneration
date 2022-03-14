@@ -53,6 +53,7 @@
  Durch Evaluierungen und Vergleiche konnten \citeauthor{zhu_unpaired_2020} beobachten, dass die wiederhergestellten Bilder und die echten Bilder ein gute Ähnlichkeit aufwiesen. Vor allem bei Manipulationen bei denen Farben und Texturen geändert werden. Genau diese Veränderungen sollen in dieser Arbeit mit Landschaftsbilder durchgeführt werden. 
  
  \subsection{FUNIT}% Dani
+ \label{sub:funit}
  Der Ansatz von \citeauthor{liu_few-shot_2019} \cite{liu_few-shot_2019}  geht das Problem an, das es oft nicht genug Bilder in der Eingabe- und Zielklassen gibt. Es wurde ein Ansatz mit wenigen Versuche (few-shot) entwickelt. Hierbei wird das Modell mit Bilder aus verschieden Eingabeklassen trainiert und erst beim Testen werden die Bilder der Zielklasse genutzt.
  Dazu wurde eine neues Netzwerkdesign mit dem gegnerischen Training von GANs vereinigt, der Name diese Modells ist  \acrfull{acr-funit}. Dieses Netzwerk besteht aus insgesamt vier Netzen, drei im Generator und eins im Discriminator. Der Generator $G$ bekommt als Eingabe ein Bild $x$ aus der Klasse $C_x$ und ein paar Bilder $y_1,\dots,y_n$ aus einer anderen Eingabeklasse $C_y$. Die Ausgabe $\hat{x}$ sollte dann den Inhalt von Bild $x$ in dem Aussehen der Klasse $K_y$ sein. 
  Die drei Netze die zusammen den Generator ergeben heißen Inhalt Encoder$E_x$, Klassen Encoder $E_y$ und Decoder $F_x$.
