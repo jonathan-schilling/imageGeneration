@@ -1,25 +1,80 @@
 \chapter{Datensatz}\label{chp:datensatz} %3 Seiten
 \glsresetall
-%Einleitung Tim
-%Benötigt viele Bilder -> Woher?
-Eine der größten Herausforderungen noch vor dem Trainieren eines GANs ist das Beschaffen eines Datensatzes.  Dies liegt vor allem daran, dass die Ergebnisqualität unter wenigen Daten leidet. Laut  \citetitle{noauthor_nvidia_2020} \cite{noauthor_nvidia_2020} werden für ein GAN zwischen 50.000 und 100.000 Trainingsbilder benötigt um hoch qualitative Ergebnisse zu erzielen. Bei wenigen Bildern kann es leichter dazu kommen, dass der Discriminator auswendig lernt. Für das Generieren wurden somit möglichst viele Landschaftsbilder gesucht. Bei Bildern für das manipulierende GAN, wurden zusätzlich verschiedene Klassen an Landschaftsbildern  benötigt, wie beispielsweise Tag/Nacht oder Sommer/Winter. Die Suche nach Datensätzen auf Kaggle, einer auf Data Science spezialisierte Plattform, auf der viele Datensätze zu finden sind, hat gezeigt, dass ein Datensatz in der hier benötigten Dimension schwer aufzutreiben ist.
+%Einleitung Tim Benötigt viele Bilder -> Woher?
+Eine der größten Herausforderungen noch vor dem Trainieren eines GANs ist das
+Beschaffen eines Datensatzes.  Dies liegt vor allem daran, dass die
+Ergebnisqualität unter wenigen Daten leidet. Laut
+\citetitle{noauthor_nvidia_2020} \cite{noauthor_nvidia_2020} werden für ein GAN
+zwischen 50.000 und 100.000 Trainingsbilder benötigt um hoch qualitative
+Ergebnisse zu erzielen. Bei wenigen Bildern kann es leichter dazu kommen, dass
+der Discriminator auswendig lernt. Für das Generieren wurden somit möglichst
+viele Landschaftsbilder gesucht. Bei Bildern für das manipulierende GAN, wurden
+zusätzlich verschiedene Klassen an Landschaftsbildern  benötigt, wie
+beispielsweise Tag/Nacht oder Sommer/Winter. Die Suche nach Datensätzen auf
+Kaggle, einer auf Data Science spezialisierte Plattform, auf der viele
+Datensätze zu finden sind, hat gezeigt, dass ein Datensatz in der hier
+benötigten Dimension schwer aufzutreiben ist.
 
 \section{Bilderdatensatz mit Flickr} %Tim
-Flickr ist ein online Fotodienst, bei dem Nutzer, die sich einen Account erstellt haben, ihre Bilder hochladen können, um sie mit anderen zu teilen. Andere Benutzer haben nun die Möglichkeit, diese zu kommentieren, zu bewerten oder weiterzuempfehlen \cite{noauthor_was_nodate}. Eine deutlich relevantere Funktion, damit Bilder von Flickr als Datensatz verwendet werden können, ist, dass Bildautoren die Fotos mit Tags versehen können. Dadurch bietet Flickr theoretisch zugriff auf Millionen von Hand kategorisierte Bilder. 
+Flickr ist ein online Fotodienst, bei dem Nutzer, die sich einen Account
+erstellt haben, ihre Bilder hochladen können, um sie mit anderen zu teilen.
+Andere Benutzer haben nun die Möglichkeit, diese zu kommentieren, zu bewerten
+oder weiterzuempfehlen \cite{noauthor_was_nodate}. Eine deutlich relevantere
+Funktion, damit Bilder von Flickr als Datensatz verwendet werden können, ist,
+dass Bildautoren die Fotos mit Tags versehen können. Dadurch bietet Flickr
+theoretisch zugriff auf Millionen von Hand kategorisierte Bilder. 
 
-Ein Manuelles herunterladen von mehreren Tausend Landschaftsbildern ist allerdings viel zu aufwendig, weshalb das Herunterladen nur mithilfe der Flickr API sinnvoll ist. Dabei setzt man jedoch großes Vertrauen auf die von anderen Nutzern gesetzten Kategorien (Tags). Nach dem Herunterladen von eintausend Bildern mit dem Tag \enquote{Landscape} wurde sichtbar, dass die Tags nicht zuverlässig genug sind. Es gab unscharfe und monochrome Bilder, Fotos, auf denen Personen im Zentrum standen und Städteaufnahmen. Der Prozentsatz an verwertbaren Landschaftsbildern war viel zu niedrig. Eine Lösung für dieses Problem war es nicht nur nach Bildern mit dem Tag  \enquote{Landscape} zu suchen, sondern auch gewünschte Objekte durch eine Tag-Blacklist auszusortieren. Somit werden Bilder mit Tags wie \enquote{City}, \enquote{Monochrome}, \enquote{Selfie} usw. noch vor dem Download aussortiert (Die genaue Liste an aussortierten Tags ist in der Datei \texttt{tagsBlack.csv} zu finden). Dies liefert deutlich bessere Ergebnisse, wobei dennoch einige Bilder nicht korrekt getaggt sind, wogegen allerdings nicht viel unternommen werden kann. Zudem stellte sich heraus, dass die Durchlauffunktion der Flickr API manche Bilder mehrfach durchlief. Dieses Verhalten kombiniert mit dem Überspringen von Bildern, die mindestens einen Tag aus der Blacklist enthalten, sorgt dafür das der Download viel Zeit in Anspruch nimmt. Das größte Problem ist jedoch, dass nach ungefähr zweieinhalbtausend Bildern kaum neue Bilder gefunden werden (1 Bild pro 5 min), da die Rate an Bildern die sich wiederholen stetig anzusteigen scheint. Um einen besseren Datensatz zu erstellen, musste noch eine andere Landschaftsbildquelle gefunden werden.
+Ein Manuelles herunterladen von mehreren Tausend Landschaftsbildern ist
+allerdings viel zu aufwendig, weshalb das Herunterladen nur mithilfe der Flickr
+API sinnvoll ist. Dabei setzt man jedoch großes Vertrauen auf die von anderen
+Nutzern gesetzten Kategorien (Tags). Nach dem Herunterladen von eintausend
+Bildern mit dem Tag \enquote{Landscape} wurde sichtbar, dass die Tags nicht
+zuverlässig genug sind. Es gab unscharfe und monochrome Bilder, Fotos, auf denen
+Personen im Zentrum standen und Städteaufnahmen. Der Prozentsatz an verwertbaren
+Landschaftsbildern war viel zu niedrig. Eine Lösung für dieses Problem war es
+nicht nur nach Bildern mit dem Tag  \enquote{Landscape} zu suchen, sondern auch
+gewünschte Objekte durch eine Tag-Blacklist auszusortieren. Somit werden Bilder
+mit Tags wie \enquote{City}, \enquote{Monochrome}, \enquote{Selfie} usw. noch
+vor dem Download aussortiert (Die genaue Liste an aussortierten Tags ist in der
+Datei \texttt{tagsBlack.csv} zu finden). Dies liefert deutlich bessere
+Ergebnisse, wobei dennoch einige Bilder nicht korrekt getaggt sind, wogegen
+allerdings nicht viel unternommen werden kann. Zudem stellte sich heraus, dass
+die Durchlauffunktion der Flickr API manche Bilder mehrfach durchlief. Dieses
+Verhalten kombiniert mit dem Überspringen von Bildern, die mindestens einen Tag
+aus der Blacklist enthalten, sorgt dafür das der Download viel Zeit in Anspruch
+nimmt. Das größte Problem ist jedoch, dass nach ungefähr zweieinhalbtausend
+Bildern kaum neue Bilder gefunden werden (1 Bild pro 5 min), da die Rate an
+Bildern die sich wiederholen stetig anzusteigen scheint. Um einen besseren
+Datensatz zu erstellen, musste noch eine andere Landschaftsbildquelle gefunden
+werden.
 
 \section{Vorhandene Bilderdatensätze}%Jonathan
 
-Da das Erstellen von Datensätzen mit Flickr nicht so ergiebig war, mussten bereits existierende Datensätze verwendet werden. Wo diese heruntergeladen werden können und welche Schritte für deren Vorbereitung erforderlich sind, wird in den folgenden Abschnitten thematisiert. 
+Da das Erstellen von Datensätzen mit Flickr nicht so ergiebig war, mussten
+bereits existierende Datensätze verwendet werden. Wo diese heruntergeladen
+werden können und welche Schritte für deren Vorbereitung erforderlich sind, wird
+in den folgenden Abschnitten thematisiert. 
 
 \subsection{Datensatz fürs Landschaftsbildgenerieren}
 
-Der Datensatz für das Generieren von Landschaftsbildern sollte mehrere Tausend Bilder enthalten, die gut belichtete Landschaften ohne Nebel und mit wenig Gebäuden abbilden. Außerdem sollte kein Schnee liegen, damit das zu trainierende neuronale Netz ein Feature weniger zu lernen hat und somit bessere Ergebnisse produziert.
+Der Datensatz für das Generieren von Landschaftsbildern sollte mehrere Tausend
+Bilder enthalten, die gut belichtete Landschaften ohne Nebel und mit wenig
+Gebäuden abbilden. Außerdem sollte kein Schnee liegen, damit das zu trainierende
+neuronale Netz ein Feature weniger zu lernen hat und somit bessere Ergebnisse
+produziert.
 
-Als Grundlage für den nach diesen Bedingungen zusammengestellten Datensatz dienen die OpenImagesV4~\cite{OpenImages,OpenImages2}. Insgesamt stehen in diesem Datensatz ca. 2 Millionen Bilder zur Verfügung. Da es sich bei diesen allerdings nicht nur um Landschaftsbilder handelt, mussten sie zunächst gefiltert werden. 
+Als Grundlage für den nach diesen Bedingungen zusammengestellten Datensatz
+dienen die OpenImagesV4~\cite{OpenImages,OpenImages2}. Insgesamt stehen in
+diesem Datensatz ca. 2 Millionen Bilder zur Verfügung. Da es sich bei diesen
+allerdings nicht nur um Landschaftsbilder handelt, mussten sie zunächst
+gefiltert werden. 
 
-Im ersten großen Schritt wurden von den ursprünglich etwa 2 Millionen Bilder nur Landschaftsbilder behalten. Dabei wurde die Website \glqq Know Your Data\grqq~\cite{KYD:OIv4} eingesetzt. Auf dieser Website können die Bilder nach verschiedenen Kriterien sortiert werden und anschließend ist es möglich, eine Liste mit den Bilder-IDs herunterzuladen. Für diese Projektarbeit wurden die OpenImagesV4 wie folgt gefiltert:
+Im ersten großen Schritt wurden von den ursprünglich etwa 2 Millionen Bilder nur
+Landschaftsbilder behalten. Dabei wurde die Website \glqq Know Your
+Data\grqq~\cite{KYD:OIv4} eingesetzt. Auf dieser Website können die Bilder nach
+verschiedenen Kriterien sortiert werden und anschließend ist es möglich, eine
+Liste mit den Bilder-IDs herunterzuladen. Für diese Projektarbeit wurden die
+OpenImagesV4 wie folgt gefiltert:
 
 \begin{itemize}
 	\item format = JPEG
@@ -32,17 +87,35 @@ Im ersten großen Schritt wurden von den ursprünglich etwa 2 Millionen Bilder n
 
 Damit wurde die Menge an Bildern auf ca. 26.000 reduziert.
 
-Im nächsten Schritt mussten die vorsortierten Bilder lokal heruntergeladen werden, damit sie zum einen weiter vorbereitet und zum anderen später beim Trainieren eingesetzt werden können. Für das Herunterladen kann ein Skript verwendet werden, dass auf der Website von den OpenImages zur Verfügung gestellt wird~\cite{OIv4:Download}. Dieses ist zwar im Bereich der OpenImagesV6 aufgeführt, funktioniert allerdings auch für die OpenImagesV4. Nachdem das Skript heruntergeladen wurde, kann es mit dem folgenden Befehl ausgeführt werden:
+Im nächsten Schritt mussten die vorsortierten Bilder lokal heruntergeladen
+werden, damit sie zum einen weiter vorbereitet und zum anderen später beim
+Trainieren eingesetzt werden können. Für das Herunterladen kann ein Skript
+verwendet werden, dass auf der Website von den OpenImages zur Verfügung gestellt
+wird~\cite{OIv4:Download}. Dieses ist zwar im Bereich der OpenImagesV6
+aufgeführt, funktioniert allerdings auch für die OpenImagesV4. Nachdem das
+Skript heruntergeladen wurde, kann es mit dem folgenden Befehl ausgeführt
+werden:
 
 \begin{lstlisting}[language=bash,caption={Download OpenImagesV4}]
-	python downloader.py <file_with_image_ids> --download_folder=<path> 
+	python downloader.py <file_with_image_ids> --download_folder=<path>
 	--num_processes=5
 \end{lstlisting}
 
-Dabei wird dem Skript der Ordner angegeben, in dem die heruntergeladenen Bilder gespeichert werden sollen. Außerdem muss eine Datei mitgegeben werden, die die IDs aller herunterzuladenden Bildern enthält. Da die Bilder-IDs von \glqq Know Your Data\grqq\ nicht in einem kompatiblen Format gespeichert werden, ist an dieser Stelle ein Hilfsskript nötig, das die IDs entsprechend anpasst.
+Dabei wird dem Skript der Ordner angegeben, in dem die heruntergeladenen Bilder
+gespeichert werden sollen. Außerdem muss eine Datei mitgegeben werden, die die
+IDs aller herunterzuladenden Bildern enthält. Da die Bilder-IDs von \glqq Know
+Your Data\grqq\ nicht in einem kompatiblen Format gespeichert werden, ist an
+dieser Stelle ein Hilfsskript nötig, das die IDs entsprechend anpasst.
 
 
-Viele der heruntergeladenen Bildern hatte eine schlechte Qualität, daher waren zwei weitere Vorbereitungsschritte notwendig. Zuerst wurden alle Bilder gesichtet und jedes, das eine schlechte Auflösung, zu viele Gebäude, starken Nebel o. Ä. zeigte, wurde manuell aussortiert. Dadurch reduzierte sich die potenziell verwendbare Bildermenge auf 10.000 Stück. Diese Menge inkludiert zusätzlich zu den Bildern aus den OpenImagesV4 auch wenige Hundert Bilder, die über die Flickr API heruntergeladen wurden. Anschließend wurde in einem zweiten Schritt jedes Bild den folgenden Kategorien zugewiesen:
+Viele der heruntergeladenen Bildern hatte eine schlechte Qualität, daher waren
+zwei weitere Vorbereitungsschritte notwendig. Zuerst wurden alle Bilder
+gesichtet und jedes, das eine schlechte Auflösung, zu viele Gebäude, starken
+Nebel o. Ä. zeigte, wurde manuell aussortiert. Dadurch reduzierte sich die
+potenziell verwendbare Bildermenge auf 10.000 Stück. Diese Menge inkludiert
+zusätzlich zu den Bildern aus den OpenImagesV4 auch wenige Hundert Bilder, die
+über die Flickr API heruntergeladen wurden. Anschließend wurde in einem zweiten
+Schritt jedes Bild den folgenden Kategorien zugewiesen:
 
 \begin{itemize}
 	\item quality\_good
@@ -57,17 +130,51 @@ Viele der heruntergeladenen Bildern hatte eine schlechte Qualität, daher waren 
 	\item snow
 \end{itemize}
 
-Dabei war nur die Bewertung der Qualität eine Pflichtkategorie, alle anderen konnten optional zugeteilt werden. Für diese Kategorisierung wurde das \glqq PyQt Image Annotation Tool\grqq~\cite{brada2022} verwendet. Da alle bisherigen Schritte des Aussortierens sehr subjektiv waren und die Bilder immer direkt während des Betrachtens gelöscht wurden, war das Ziel des letzten Schrittes eine etwas objektivere Filterung der Bilder. Zwar ist auch die Zuweisung der Kategorien noch subjektiv, allerdings wurden die Bilder erst im Nachhinein anhand definierter Kriterien aussortiert. So wurden beispielsweise alle Bilder gelöscht, die einer Kategorie mit \glqq bad\grqq\ bzw. \glqq dark\grqq\ oder \glqq snow\grqq\ zugewiesen wurden. Alle weiteren Kriterien sind im Quellcode in der Datei \texttt{dataset\_creator/preprocess\_scripts/sort\_images.py} zu finden.
+Dabei war nur die Bewertung der Qualität eine Pflichtkategorie, alle anderen
+konnten optional zugeteilt werden. Für diese Kategorisierung wurde das \glqq
+PyQt Image Annotation Tool\grqq~\cite{brada2022} verwendet. Da alle bisherigen
+Schritte des Aussortierens sehr subjektiv waren und die Bilder immer direkt
+während des Betrachtens gelöscht wurden, war das Ziel des letzten Schrittes eine
+etwas objektivere Filterung der Bilder. Zwar ist auch die Zuweisung der
+Kategorien noch subjektiv, allerdings wurden die Bilder erst im Nachhinein
+anhand definierter Kriterien aussortiert. So wurden beispielsweise alle Bilder
+gelöscht, die einer Kategorie mit \glqq bad\grqq\ bzw. \glqq dark\grqq\ oder
+\glqq snow\grqq\ zugewiesen wurden. Alle weiteren Kriterien sind im Quellcode in
+der Datei \texttt{dataset\_creator/preprocess\_scripts/sort\_images.py} zu
+finden.
 
-Nach diesem letzten Schritt der Vorbereitung umfasst der Datensatz für das Generieren von Landschaftsbildern etwas mehr als 7.000 Bilder.
+Nach diesem letzten Schritt der Vorbereitung umfasst der Datensatz für das
+Generieren von Landschaftsbildern etwas mehr als 7.000 Bilder.
 
 \subsection{Datensatz für die Bildermanipulation}
 
-Zu Beginn des Projektes war geplant, die Manipulation von Bildern anhand von Landschaftsbildern durchzuführen. Dafür wäre ein Datensatz notwendig gewesen, der zum Beispiel Landschaften am Tag und Landschaften bei Nacht beinhaltet, sodass ein neuronales Netz ein Bild aus einer Domäne in die jeweils andere transferieren kann. Dieser Datensatz sollte mithilfe von Flickr erstellt werden. Da das Downloaden von ausreichend vielen Bildern über die Flickr API nicht wie erwartet funktioniert hat, musste ein anderer Datensatz gefunden werden, anhand dessen die Netze trainiert werden können.
+Zu Beginn des Projektes war geplant, die Manipulation von Bildern anhand von
+Landschaftsbildern durchzuführen. Dafür wäre ein Datensatz notwendig gewesen,
+der zum Beispiel Landschaften am Tag und Landschaften bei Nacht beinhaltet,
+sodass ein neuronales Netz ein Bild aus einer Domäne in die jeweils andere
+transferieren kann. Dieser Datensatz sollte mithilfe von Flickr erstellt werden.
+Da das Downloaden von ausreichend vielen Bildern über die Flickr API nicht wie
+erwartet funktioniert hat, musste ein anderer Datensatz gefunden werden, anhand
+dessen die Netze trainiert werden können.
 
-Dabei ist die Wahl auf den Oxford-IIIT Pet Datensatz~\cite{parkhi12a} gefallen, der ca. 2.300 Bilder von Katzen und ca. 5.000 Bilder von Hunden enthält. Im Gegensatz zum Datensatz fürs Landschaftsbildgenerieren musste dieser nur heruntergeladen werden und war dann bereit für die Verwendung. Für dieses Projekt wurde der Datensatz von der offiziellen Website~\cite{Pets:Download} heruntergeladen.
+Dabei ist die Wahl auf den Oxford-IIIT Pet Datensatz~\cite{parkhi12a} gefallen,
+der ca. 2.300 Bilder von Katzen und ca. 5.000 Bilder von Hunden enthält. Im
+Gegensatz zum Datensatz fürs Landschaftsbildgenerieren musste dieser nur
+heruntergeladen werden und war dann bereit für die Verwendung. Für dieses
+Projekt wurde der Datensatz von der offiziellen Website~\cite{Pets:Download}
+heruntergeladen.
 
 \section{Datensatz Import und Verwendung}%Tim
-Um die heruntergeladenen Bilder schlussendlich zum Trainieren zu verwenden, wurde die Keras Methode  \texttt{image\_dataset\_from\_directory} verwendet. Diese kann Bilder direkt aus einem Verzeichnis laden, auf ein Seitenverhältnis und eine Bildgröße zuschneiden und in Batches einteilen. Um den Datensatz zu normalisieren, wurde ein Rescaling-Layer verwendet, welcher die Bilder auf Werte zwischen -1 und 1 abbildet. Um die spätere Lernperformance zu optimieren, wurde der Datensatz zudem gecached und durch \enquote{prefetch} pipelinebar gemacht. Außerdem wird der Datensatz bei jedem Durchgang gemischt, um bessere Lernergebnisse zu erziehen. 
+Um die heruntergeladenen Bilder schlussendlich zum Trainieren zu verwenden,
+wurde die Keras Methode  \texttt{image\_dataset\_from\_directory} verwendet.
+Diese kann Bilder direkt aus einem Verzeichnis laden, auf ein Seitenverhältnis
+und eine Bildgröße zuschneiden und in Batches einteilen. Um den Datensatz zu
+normalisieren, wurde ein Rescaling-Layer verwendet, welcher die Bilder auf Werte
+zwischen -1 und 1 abbildet. Um die spätere Lernperformance zu optimieren, wurde
+der Datensatz zudem gecached und durch \enquote{prefetch} pipelinebar gemacht.
+Außerdem wird der Datensatz bei jedem Durchgang gemischt, um bessere
+Lernergebnisse zu erziehen. 
 
-Beim Laden der Hunde und Katzenbilder für das Bildmanipulieren wurde zudem darauf geachtet, dass sowohl die Batches der Hundebilder als auch die der Katzenbilder immer die gleiche Größe haben. 
+Beim Laden der Hunde und Katzenbilder für das Bildmanipulieren wurde zudem
+darauf geachtet, dass sowohl die Batches der Hundebilder als auch die der
+Katzenbilder immer die gleiche Größe haben. 
