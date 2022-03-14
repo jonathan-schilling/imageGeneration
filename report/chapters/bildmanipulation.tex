@@ -4,15 +4,23 @@
  \section{Modelle} % Dani
  
 \subsection{CycleGAN}% Dani
+\label{sub:cyclegan}
  
  \subsection{FUNIT}% Dani
  
  \section{Implementierung} % Tim nach Implementierung Generieren
+ Dieser Abschnitt beschreibt die Implementierung eines CycleGAN. mit Tensorflow und Keras. Da dieses GAN deutlich größer als das \gls{acr-SNDCGAN} ist, konnte es, aufgrund der beschränkten Computerressourcen, nur einmal trainiert werden. Alle Trainingsparameter wurden vorher festgelegt, wobei die Erfahrung aus \cref{sec:gen_impl} 
  
  \subsection{Umsetzung in Tensorflow/Keras}
+ Wie auch für das \gls{acr-SNDCGAN} wurde ein \enquote{Sequential model} von Keras~\cite{keras:SequentialModel} verwendet um die einzelnen Schichten abzubilden. Da es nicht alle benötigten Netzschichten in Keras  implementiert sind mussten zudem für die ResBlock und ReflectionPadding2D Schichten, siehe \cref{sub:cyclegan}, sowie für Tanh,  eigene Klassen geschrieben werden, welche von einer abstrakten Keras Schicht erben. 
  
- \subsection{Parameter Anpassung} % Haben wir noch nicht!!!!
+ Das Training des CycleGAN wurde ähnlich wie das \gls{acr-SNDCGAN} in \cref{sec:gen_impl} implementiert. Ebenfalls wurde es durch Checkpoints ermöglicht das Netz jederzeit anzuhalten und später weiter zu trainieren. Adam \cite{tf:adam} wurde als Optimizer, und GradientTapes \cite{tf:gradientape} zur Berechnung der Gradienten, verwendet.
  
+Die Optimizer sind identisch parametrisiert und wurden wie in der Implementierung von \cite{brownlee_how_2019-1} auf eine Lernrate von 2e-4 und beta1 auf 0.5 gesetzt. 
+
+Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainiert werden ist es sehr speicherintensiv zu trainieren. Nur dadurch, dass einzelne Trainingsschritte in eine Funktion mit dem \enquote{tf.function} decorater \cite{noauthor_tffunction_nodate}, ausgelagert sind kann die stärkste dem Projekt zur Verfügung stehende Grafikkarte genug speicher bieten, um das Training mit einer geringen Batchgröße durchzuführen. 
+
+
  \section{Evaluierung} % TODO Tim und Joshua
 
  \paragraph{SIFID} Als Metrik für die Evaluierung der Ergebnisse der

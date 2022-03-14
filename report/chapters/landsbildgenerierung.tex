@@ -182,6 +182,7 @@ Projektes den Adam-Optimizer \cite{kingma2014adam}.
 \paragraph{Training} Einer der großen Vorteile des \gls{acr-WGAN} ist, dass es keinen Discriminator gibt, der dem Generator \enquote{davonläuft}. Ein besserer critic sorgt für bessere Ergebnisse \cite[S. 8]{arjovsky_wasserstein_2017}. Deshalb wird beim Training der critic mehr trainiert, als der Generator, in diesem Fall fünf mal so oft. Zudem wird RMSProp statt Adam als Optimizer verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  
   \section{Implementierung} % Jonathan
+  \label{sec:gen_impl}
  
  Der folgende Abschnitt thematisiert die Implementierung des zuvor beschriebenen SNDCGAN-Modells in Tensorflow bzw. Keras. Außerdem wird auch die Optimierung der Parameter der Netze behandelt.
  
