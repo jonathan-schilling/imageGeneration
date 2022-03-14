@@ -44,6 +44,14 @@ class ReflectionPadding2D(Layer):  # From https://stackoverflow.com/questions/50
         """ If you are using "channels_last" configuration"""
         return (s[0], s[1] + 2 * self.padding[0], s[2] + 2 * self.padding[1], s[3])
 
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'padding': self.padding,
+            'input_spec': self.input_spec,
+        })
+        return config
+
     def call(self, x, mask=None):
         w_pad, h_pad = self.padding
         return tf.pad(x, [[0, 0], [h_pad, h_pad], [w_pad, w_pad], [0, 0]], 'REFLECT')
@@ -55,18 +63,30 @@ class ResBlock(Layer):
         self.filters = filters
         self.conv1 = Conv2D(filters=self.filters, kernel_size=(3, 3), padding="same", strides=(1, 1))
         self.instance1 = InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
-                                   gamma_initializer="random_uniform")  # IntsanceNormalisation
+                                               gamma_initializer="random_uniform")  # IntsanceNormalisation
         self.relu = ReLU()
         self.conv2 = Conv2D(filters=self.filters, kernel_size=(3, 3), padding="same", strides=(1, 1))
         self.instance2 = InstanceNormalization(axis=1, center=True, scale=True, beta_initializer="random_uniform",
-                              gamma_initializer="random_uniform")
+                                               gamma_initializer="random_uniform")
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'filters': self.filters,
+            'conv1': self.conv1,
+            'instance1': self.instance1,
+            'relu': self.relu,
+            'conv2': self.conv2,
+            'instance2': self.instance2,
+        })
+        return config
 
     def call(self, x):
         fx = self.conv1(x)
         fx = self.instance1(fx)
         fx = self.relu(fx)
         fx = self.conv2(fx)
-        out = add([x,fx])
+        out = add([x, fx])
         out = self.relu(out)
         out = self.instance2(out)
         return out
@@ -196,6 +216,10 @@ class CycleGAN(object):
         checkpoint_path = path.join(path_like, "checkpoints")
         if not path.exists(checkpoint_path):
             os.mkdir(checkpoint_path)
+        if not path.exists(path.join(path_like, "models")):
+            os.mkdir(path.join(path_like, "models"))
+            os.mkdir(path.join(path_like, "models", "generator_f"))
+            os.mkdir(path.join(path_like, "models", "generator_g"))
         self.preview_output = path.join(path_like, "preview")
         self.path = path_like
 
@@ -357,14 +381,14 @@ class CycleGAN(object):
                 "total_gen_g_loss": total_gen_g_loss, "total_gen_f_loss": total_gen_f_loss,
                 "total_cycle_loss": total_cycle_loss}
 
-    def train(self, epochs):
+    def train(self, epochs, checkpoint_frequency=5):
         # manually enumerate epochs
         start_time = time()
         for i in range(epochs):
             local_losses = {"gen_g_loss": [], "gen_f_loss": [], "identity_loss_g": [], "identity_loss_f": [],
                             "total_gen_g_loss": [], "total_gen_f_loss": [],
                             "total_cycle_loss": []}
-            print("####### Epoch", i+self.epoch, "#######")
+            print("####### Epoch", i + self.epoch, "#######")
             for j, (batch1, batch2) in enumerate(iter(self.loader)):
                 losses = self.train_step(batch1, batch2)
                 for key, val in losses.items():
@@ -383,8 +407,18 @@ class CycleGAN(object):
                     self.losses[key].append(sum(val) / len(val))
                 translated_image_g = self.generator_g(batch1[0:2], training=False)
                 translated_image_f = self.generator_f(batch1[0:2], training=False)
-                self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f, i+self.epoch)
-                self.ckpt_manager.save(checkpoint_number=i+self.epoch+1)
+                self.summarize_performance(batch1[0:2], batch2[0:2], translated_image_g, translated_image_f,
+                                           i + self.epoch)
+                self.ckpt_manager.save(checkpoint_number=i + self.epoch + 1)
+
+                if (i + self.epoch) % checkpoint_frequency == 0:
+                    gen_modelf_path = path.join(self.path, "models", "generator_f",
+                                                "gen_weights_f-" + str(i + self.epoch) + ".h5")
+                    gen_modelg_path = path.join(self.path, "models", "generator_g",
+                                                "gen_weights_g-" + str(i + self.epoch) + ".h5")
+                    self.generator_f.save_weights(gen_modelf_path, save_format='h5')
+                    self.generator_g.save_weights(gen_modelg_path, save_format='h5')
+
                 with open(self.losses_path, mode='wb')as f:
                     pickle.dump(self.losses, f)
         # line plots of loss

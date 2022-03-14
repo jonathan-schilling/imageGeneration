@@ -217,6 +217,8 @@ class SNDCGAN(object):
         # plot history
         plt.clf()
         for key, val in self.losses.items():
+            if key == "epoch":
+                continue
             plt.plot(val, label=key)
         plt.legend()
         plt.savefig(path.join(self.dir_path, 'plot_line_plot_loss.png'))
