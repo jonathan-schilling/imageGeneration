@@ -18,7 +18,7 @@
  Vergleich der Vorgehensweisen und der Ergebnisse, siehe dazu \cref{evalGen}.
  % TODO: Ist das so?
  
-\subsection{SNDCGAN} % Joshua
+\subsection{SNDCGAN}\label{subsec:mod:sndc} % Joshua
 \label{sub:sndcgan}
 
 Das erste im Projekt umgesetzte \gls{acr-GAN} Modell, ist das \gls{acr-SNDCGAN}
@@ -48,7 +48,7 @@ vollständig verbunden Schichten verwendet; es wird Batch-Normalisierung (d.\,h.
 das Normalisieren der Eingabe zu einem Mittelwert von null und einer Varianz von
 eins) auf die meisten Schichten angewandt und es wird \emph{ReLU} als
 Aktivierungsfunktion (bis auf die Ausgabeschicht, die tanh verwendet) für den
-Generator bzw. \emph{Leakey ReLU} für den Discriminator verwendet.
+Generator bzw. \emph{Leaky ReLU} für den Discriminator verwendet.
 \gls{acr-DCGAN} beansprucht für sich, vor allem durch diese Änderungen, das
 Training im Vergleich zu anderen Ansätzen stabilisieren zu können \cite[S.
 9]{radford2015unsupervised}.
@@ -218,11 +218,11 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  SNDCGAN-Modells in Tensorflow bzw. Keras. Außerdem wird auch die Optimierung
  der Parameter der Netze behandelt.
  
- \subsection{Umsetzung in Tensorflow/Keras}\label{subsec:imp:sndc}
+ \subsection{SNDCGAN: Umsetzung in Tensorflow/Keras}\label{subsec:imp:sndc}
  
  Ein wichtiger Teil der Implementierung ist die Überführung der in
  Abschnitt~\ref{subsec:mod:sndc} vorgestellten Architektur des SNDCGANs in ein
- Tensorflow-Modell. Dafür wird das \glqq Sequential model\grqq\ von
+ Tensorflow-Modell. Dafür wird das \glqq Sequential Model\grqq\ von
  Keras~\cite{keras:SequentialModel} verwendet. In dem Modell werden die
  benötigten Schichten des Generators und des Discriminators definiert. Beim
  Trainieren wird der Input sequenziell von einer Schicht zur nächsten
@@ -277,7 +277,7 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  die letzten zwei erhalten bleiben. Dadurch konnte der Speicherplatz pro
  gespeicherter Epoche um zweidrittel reduziert werden.
  
- \subsection{Anpassung von Parametern} % Jonathan
+ \subsection{SNDCGAN: Anpassung von Parametern} % Jonathan
  
  Eine große Herausforderung in diesem Projekt war die richtige Wahl der
  Parameter für das Training, sodass das neuronale Netz möglichst gut
