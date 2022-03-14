@@ -14,3 +14,25 @@
  \subsection{Parameter Anpassung} % Haben wir noch nicht!!!!
  
  \section{Evaluierung} % TODO Tim und Joshua
+
+ \paragraph{SIFID} Als Metrik für die Evaluierung der Ergebnisse der
+ Bildmanipulation wird die \gls{acr-SIFID} verwendet, die von
+ \citeauthor{shaham2019singan} in ihrem Paper \citetitle{shaham2019singan}
+ \cite{shaham2019singan} eingeführt wurde. Dies ist eine Erweiterung der bereits
+ für die Bildgenerierung verwendeten \gls{acr-FID} \cite{heusel2017gans} (vgl.
+ \cref{evalGen} % TODO: Ist die da beschrieben?
+ ). Anstatt die Differenz zwischen der Merkmalsverteilung für eine
+ Gruppe von generierten und eine Gruppe von originalen Bildern zu messen (so wie
+ die \gls{acr-FID}), misst die \gls{acr-SIFID} die Differenz zwischen einem
+ Eingabebild in das I2I GAN und dem erzeugen Ausgabebild
+ \cite[S. 4575]{shaham2019singan}. Wie die \gls{acr-FID} vergleicht die
+ \gls{acr-SIFID} dabei die Aktivierung einer versteckten Schicht des
+ \emph{Inception Networks} \cite{szegedy2015going}.
+ %TODO: Ist das im Bilderzeugungs-Evaluierungskapitel so vorhanden?
+ Anstatt allerdings die
+ Aktivierung nach der letzten Pooling-Schicht zu verwenden, nutzt die
+ \gls{acr-SIFID} die »tiefen« Eigenschaften, die in der Aktivierung der
+ Convolution-Schicht vor der zweiten Pooling-Schicht zu finden sind \cite[S.
+ 4575]{shaham2019singan}. Wie für die \gls{acr-FID} sind niedrige Werte besser,
+ sie bedeuten, dass der Unterschied zwischen den beiden Bildern geringer ist
+ \cite[S. 5]{pang2021image}.
