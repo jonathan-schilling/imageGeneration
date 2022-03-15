@@ -8,7 +8,7 @@
  \section{Modelle}% Joshua
 
  Wie in \cref{GANs} beschreiben, gibt es im Bereich der \gls{acr-GAN}s
- zahlreiche Varianten und Anpassungen, die versuchen verschiedene Schwachstellen
+ zahlreiche Varianten und Anpassungen, die versuchen, verschiedene Schwachstellen
  des Konzeptes auszugleichen. Um dieser Vielzahl von Möglichkeiten zu begegnen,
  wurden in diesem Projekt zwei weit verbreitete \cite[S. 3]{kurach2018gan}
  GAN-Architekturen umgesetzt, das \emph{\gls{acr-DCGAN}}
@@ -37,7 +37,7 @@ Trainingsprozedere ergänzt.
 \citeauthor{radford2015unsupervised} \cite{radford2015unsupervised} ist es die
 ursprünglich \cite[vgl.][]{goodfellow2014generative} auf vollständig verbundenen
 Schichten (\emph{fully connected} bzw. \emph{Multilayer Perceptron (MLP)})
-basierende \gls{acr-GAN} Architektur mit dem speziell für Bildverarbeitung
+basierende \gls{acr-GAN}-Architektur mit dem speziell für Bildverarbeitung
 attraktiven \gls{acr-CNN} zu verbinden \cite[S. 1]{radford2015unsupervised}.
 Dabei nutzt das \gls{acr-DCGAN} bestimmte (zu der Zeit) aktuelle Entwicklungen
 der \gls{acr-CNN}s \cite[vgl.][S. 3]{radford2015unsupervised}: Auf
@@ -165,7 +165,7 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
     \emph{Legende:} Der Kernel ist beschrieben im Format $[\text{x\_Größe},
     \text{y\_Größe}, \text{Schrittweite}]$; $h$ und $w$ beschreiben die Höhe
     bzw. Breite des Eingabe-Bildes in Pixeln; damit beschreibt die Ausgabe
-    $\text{Höhe} \times \text{Breite} \times \text{Kanäle}$ , wobei das
+    $\text{Höhe} \times \text{Breite} \times \text{Kanäle}$, wobei das
     Eingabe-Bild als farbiges Bild drei Kanäle hat.
   \end{center}
 \end{table}
@@ -176,10 +176,10 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
  alternativen Weg um den Generator zu trainieren, welcher die Datenverteilung
  der gegebenen Trainingsdaten besser approximieren soll. Anstatt einen
  Discriminator zu verwenden, der Bilder in real oder nicht real kategorisiert,
- verwendet das \gls{acr-WGAN} einen einen \enquote{critic}, welcher durch einen
+ verwendet das \gls{acr-WGAN} einen einen \enquote{Critic}, welcher durch einen
  linearen Wert Bilder nach ihrem Realismus bewertet. 
  
- Für die Aufgebe Landschaftsbilder zu generieren wurde ebenfalls ein
+ Für die Aufgabe Landschaftsbilder zu generieren wurde ebenfalls ein
  \gls{acr-WGAN} implementiert. Aufgrund fehlender Trainingsressourcen konnte
  diese Implementation jedoch nicht optimiert werden und liefert deutlich
  schlechtere Ergebnisse als die \gls{acr-SNDCGAN} Implementierung. Dennoch ist
@@ -190,24 +190,24 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
  \cref{sub:sndcgan}. Allerdings wurden weniger Convolutions verwendet um
  Ressourcen zu sparen, da die Architektur noch nicht optimiert wurde. Der Critic
  verwendet ebenfalls Convolutions, und fügt diese am Ende zu einem linearen Output zusammen \cite{brownlee_how_2019-1}.
- Außerdem werden die Gewichte im critic zwischen -0.01 und 0.01 beschränkt
+ Außerdem werden die Gewichte im Critic zwischen -0.01 und 0.01 beschränkt
  \cite{arjovsky_wasserstein_2017}. 
  
- \paragraph{Kostenfunktion} Das \gls{acr-WGAN} verwendet das Wasserstein loss,
- welches versucht den Abstand zwischen realen und generierten Bildern zu
+ \paragraph{Kostenfunktion} Das \gls{acr-WGAN} verwendet den Wasserstein-Loss,
+ welcher versucht den Abstand zwischen realen und generierten Bildern zu
  maximieren. Dabei können die Kostenfunktionen nach \cite{brownlee_how_2019}
  folgendermaßen definiert werden:
  \begin{itemize}
- 	\item Critic Loss = [Durchschnittlicher critic Wert auf realen Bildern] –
- 	[Durchschnittlicher critic Wert auf generierten Bildern]
- 	\item Generator Loss = -[Durchschnittlicher critic Wert auf generierten
+ 	\item Critic Loss = [Durchschnittlicher Critic Wert auf realen Bildern] –
+ 	[Durchschnittlicher Critic Wert auf generierten Bildern]
+ 	\item Generator Loss = -[Durchschnittlicher Critic Wert auf generierten
  	Bildern]
  \end{itemize}
 
-\paragraph{Training} Einer der großen Vorteile des \gls{acr-WGAN} ist, dass es
+\paragraph{Training} Einer der großen Vorteile des \gls{acr-WGAN}s ist, dass es
 keinen Discriminator gibt, der dem Generator \enquote{davonläuft}. Ein besserer
-critic sorgt für bessere Ergebnisse \cite[S. 8]{arjovsky_wasserstein_2017}.
-Deshalb wird beim Training der critic mehr trainiert, als der Generator, in
+Critic sorgt für bessere Ergebnisse \cite[S. 8]{arjovsky_wasserstein_2017}.
+Deshalb wird beim Training der Critic mehr trainiert, als der Generator, in
 diesem Fall fünf mal so oft. Zudem wird RMSProp statt Adam als Optimizer
 verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  
@@ -318,8 +318,8 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  Um den Trainingsprozess bei diesen Versuchen zu beschleunigen, wurde immer nur
  mit relativ wenig Bildern gelernt. Erst nachdem die ersten Erfolge durch eine
  bessere Wahl der initialen Lernrate sichtbar wurden, erhöhte sich die
- Bildermenge auf zunächst ca. 1.500 Stück und später dann auf etwas mehr als
- 7.000, was auch eine weitere Verbesserung der Ergebnisse mit sich brachte.
+ Bildermenge auf zunächst ca. 1500 Stück und später dann auf etwas mehr als
+ 7000, was auch eine weitere Verbesserung der Ergebnisse mit sich brachte.
  Allerdings beschränkten sich die Verbesserung auf sichtbare Änderungen in den
  abgebildeten Formen, die zunehmend komplexer wurden. Die erstellten Bilder
  hatten jedoch noch wenig Ähnlichkeit zu (schlecht aufgelösten)
@@ -336,15 +336,12 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
   GANs erfolgreich abgeschlossen wurde, erfolgt die Evaluation der Ergebnisse.
   Dafür wurden zwei verschieden Methoden genutzt. Die Erste betrachtet den
   durchschnittlichen Loss des Generators und Discriminators, zu sehen in
-  Abbildung \ref{fig:plot_losses_gen}.  Hier ist zu erkennen das zu Beginn
-  Spitzen von Großen Losses auftreten, diese sich aber im Verlauf zu späteren
-  Epochen auspendeln, und zu eine Minimum tendiert. Daraus kann gefolgert
+  Abbildung \ref{fig:plot_losses_gen}.  Hier ist zu erkennen, dass zu Beginn
+  Spitzen von großen Losses auftreten, diese sich aber im Verlauf zu späteren
+  Epochen auspendeln und zu einem Minimum tendieren. Daraus kann gefolgert
   werden, dass die Netze ihre Aufgabe erfüllen, nämlich die Losse beider Netze
   zu minimieren. In den letzten hundert Epochen ist eine steigende Tendenz zu
-  beobachten, die auf das overfitting zurück geführt werden kann.
- 
- 
- 
+  beobachten, die auf ein Overfitting zurückgeführt werden kann.
  
  \begin{figure}[t]
  	\centering
@@ -353,9 +350,9 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  	\label{fig:plot_losses_gen}
  \end{figure}
  
- Die zweite Methode ist das berechnen der \acrfull{acr-FID}, diese bestimmt die
+ Die zweite Methode ist das Berechnen der \acrfull{acr-FID}. Diese bestimmt die
  Ähnlichkeit der echten und der generierten Bilder \cite{heusel_gans_2017}. Dies
- wird über die Fr\'echet Distance gemacht, welche die Gaußglocken der
+ wird über die Fr\'echet Distanz gemacht, welche die Gaußglocken der
  Verteilungen beider Domänen vergleicht. Die Gaußglocke wird über den Mittelwert
  $m$ und die Kovarianz $C$ festgelegt. 
  
@@ -363,17 +360,17 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  \]
  
  Die in dieser Arbeit umgesetzte Implementierung von \gls{acr-FID} geht über
- alle gespeicherten Modelle des Generator (hier jede fünfte Epoche). Mit diesen
+ alle gespeicherten Modelle des Generators (hier jede fünfte Epoche). Anhand dieser
  werden  
  mittels über alle Epochen gleichbleibenden Zufallsvektoren Bilder generiert.
  Diese Bilder werden nun mit einer zufälligen aber festen Auswahl an echten
- Bilder verglichen, in dem alle Bilder durch den beste Discriminator bewertet
+ Bilder verglichen, in dem alle Bilder durch den besten Discriminator bewertet
  werden. Beim Discriminator müssen die letzten beiden Schichten entfernt werden
  und durch eine Pooling-Schicht mit anschließendem Abflachen ersetzt werden,
  damit die Berechnung der Mittelwerte und Kovarianzen durchgeführt werden kann. 
  
  Die Auswertung des genutzten Modells unter Verwendung des Discriminators mit
- geringsten Losses sind in Abbildung \ref{fig:plot_fids_gen} sichtbar. Über die
+ geringsten Loss ist in Abbildung \ref{fig:plot_fids_gen} sichtbar. Über die
  Approximation ist klar zu erkennen, dass der Wert im Laufe der Zeit fallend
  ist, was eine Annäherung der generierten Bilder zu den echten Bilder
  widerspiegelt. Genau diese Eigenschaft ist bei der Generierung mittels GANs
@@ -387,12 +384,12 @@ verwendet \cite[S. 12]{arjovsky2017wasserstein}.
  \end{figure}
  
  Das Fazit aus den beiden Evaluierungsmethoden ist, dass das in dieser Arbeit
- implementierte und trainierte GAN die Aufgabe des Generieren von
- Landschaftsbilder gut umgesetzt hat. Denn der Loss des gesamten Netzes pendelt
- sich auf feste Werte ein, bei dem es sich um das Minimum handelt. Sowie die
- Ergebnisse der \gls{acr-FID} zeigen das die generierten Bilder relativ ähnlich
- zu echten Bilder sind, wodurch die generierten Bilder für den Menschen als
- echten Landschaftsbild gesehen wird.
+ implementierte und trainierte GAN die Aufgabe des Generierens von
+ Landschaftsbilder gut umgesetzt hat. Die Losses des gesamten Netzes pendeln
+ sich auf feste Werte ein, bei denen es sich um das Minimum handelt. Sowie die
+ Ergebnisse der \gls{acr-FID} zeigen, dass die generierten Bilder relativ ähnlich
+ zu echten Bilder sind, wodurch die generierten Bilder für den Menschen wie
+ echte Landschaftsbilder wirken.
  %TODO: Bilder vergleich zeigen?
  
  
