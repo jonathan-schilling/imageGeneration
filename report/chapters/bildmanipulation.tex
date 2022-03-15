@@ -8,6 +8,7 @@
  In Rahmen dieser Arbeit wurden sich mit  zwei Ansätze genauer beschäftigt. Der erste Ansatz ist der des CycleGANs \cite{zhu_unpaired_2020}, welches mittels des cycle consistency losses versucht Bilder zwischen zwei Domänen zu transferieren. Der zweite Ansatz heißt  \gls{acr-funit} \cite{liu_few-shot_2019} der sich am Vorgehen des Menschen Gehirns orientiert und versucht mit wenigen Bilder aus ähnlichen Domänen die Übersetzung zu lernen.
  
  \subsection{CycleGAN}% Dani
+ \label{sub:cyclegan}
  Durch das Fehlen von gepaarten Bilder fehlt eine Möglichkeit zu überprüfen, ob der Generator den Inhalt des Bildes bei behält. \citeauthor{zhu_unpaired_2020} \cite{zhu_unpaired_2020} lösen diese Problem durch einfügen einer weiteren Bedingung: Bilder sollen, wenn sie übersetzt wurden und anschließen wieder zurück umgewandelt werden, gleich sein bzw. sehr ähnlich. Dies wird mittels des cycle consistency loss umgesetzt. 
  Dazu benötigt man zwei GANs, eins welches aus der Eingabedomäne in die Zieldomäne übersetzt, $G: X \rightarrow Y$ und ein anderes welches das Gegenteil durchführt,   $F: Y \rightarrow X$.
  Der cycle consistency loss gibt an wie groß der Verlust zwischen dem ursprünglichen Bild und der Ausgabe nach dem manipulieren beider GANs. 
@@ -50,6 +51,80 @@
  	\label{fig:cylce_loss}
  \end{figure}
  
+ Die Architektur der genutzten Netze stammt von \citeauthor{johnson2016perceptual} \cite{johnson2016perceptual}. Für den Generator gibt es zwei Varianten, die eine für Eingabegröße $128 \times 128$ mit 6 Residual Blöcken und die andere für Eingabegröße $256 \times 256$ mit 9 Residual Blöcken (ResBlock), diese Blöcke führen zwei Convolution mit gleicher Anzahl an Filter aus. Als Normalisierung wird Instance Normalisierung genutzt, die ist eine Erweiterung der Batch Normalisierung \cite{ulyanov_instance_2016}. In \cref{tab:cycleGAN} ist der Aufbau der Generators und der Discriminatoren für die Variante mit Eingabegröße $256 \times 256$ zusehen.
+ 
+ \begin{table}[]
+ 	\caption{CycleGAN Architektur}
+ 	\label{tab:cycleGAN}
+ 	\begin{center}
+ 		\begin{minipage}{.5\linewidth}
+ 			\caption{CycleGAN Discriminator}
+ 			\centering
+ 			\begin{tabular}{lcl}
+ 				\toprule
+ 				Schicht & Kernel & Filter\\
+ 				\toprule
+ 				Conv, lReLU & $[4,4,2]$ & $64$\\
+ 				\midrule
+ 				Conv, IN, lReLU & $[4,4,2]$ & $128$\\
+ 				\midrule
+ 				Conv, IN, lReLU & $[4,4,2]$ & $256$\\
+ 				\midrule
+ 				Conv, IN, lReLU & $[4,4,2]$ & $512$\\
+ 				\midrule
+ 				Conv & &$1$\\
+ 				\bottomrule
+ 			\end{tabular}
+ 		\end{minipage}%
+ 		\begin{minipage}{.5\linewidth}
+ 			\centering
+ 			\caption{CycleGAN Generator}
+ 			\begin{tabular}{lcl}
+ 				\toprule
+ 				Schicht & Kernel & Ausgabe\\
+ 				\toprule
+ 				Conv, IN, ReLU & $[7,7,1]$ & $64$\\
+ 				\midrule
+ 				Conv, IN, ReLU & $[3,3,2]$ & $128$\\
+ 				\midrule
+ 				Conv, IN, ReLU & $[3,3,2]$ & $256$\\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				ResBlock & $[3,3,1]$& $256$ \\
+ 				\midrule
+ 				DeConv, IN, ReLU & $[3,3,2]$ & $128$\\
+ 				\midrule
+ 				DeConv, IN, ReLU & $[3,3,2]$ & $64$\\
+ 				\midrule
+ 				Conv, IN, ReLU & $[7,7,1]$ & $3$\\
+ 				\bottomrule
+ 			\end{tabular}
+ 		\end{minipage} 
+ 	\end{center}
+ 	\begin{center}
+ 		\bigskip
+ 		\emph{Quelle:} Von \cite[]{zhu_unpaired_2020} übernommen.\\
+ 		\emph{Legende:} Der Kernel ist beschrieben im Format $[\text{x\_Größe},
+ 		\text{y\_Größe}, \text{Schrittweite}]$;IN steht für InstanceNorm; LeakyReLu hat eine Neigung von $0,2$;
+ 	\end{center}
+ \end{table}
+ 
+ 
  Durch Evaluierungen und Vergleiche konnten \citeauthor{zhu_unpaired_2020} beobachten, dass die wiederhergestellten Bilder und die echten Bilder ein gute Ähnlichkeit aufwiesen. Vor allem bei Manipulationen bei denen Farben und Texturen geändert werden. Genau diese Veränderungen sollen in dieser Arbeit mit Landschaftsbilder durchgeführt werden. 
  
  \subsection{FUNIT}% Dani
@@ -78,9 +153,10 @@
  	\label{fig:funitmodelsimple}
  \end{figure}
  
+
  
  \section{Implementierung} % Tim nach Implementierung Generieren
- Dieser Abschnitt beschreibt die Implementierung eines CycleGAN. mit Tensorflow und Keras. Da dieses GAN deutlich größer als das \gls{acr-SNDCGAN} ist, konnte es, aufgrund der beschränkten Computerressourcen, nur einmal trainiert werden. Alle Trainingsparameter wurden vorher festgelegt, wobei die Erfahrung aus \cref{sec:gen_impl} 
+  Für die Implementierung wurde sich auf Grund des Datensatzes und der beschränken Rechenleistung für das CycleGAN entschieden. Dieser wurde mit Tensorflow und Keras umgesetzt. Da dieses GAN deutlich größer als das \gls{acr-SNDCGAN} ist, konnte es, aufgrund der beschränkten Computerressourcen, nur einmal trainiert werden. Alle Trainingsparameter wurden vorher festgelegt, wobei die Erfahrung aus \cref{sec:gen_impl} genutzt wurden.
  
  \subsection{Umsetzung in Tensorflow/Keras}
  Wie auch für das \gls{acr-SNDCGAN} wurde ein \enquote{Sequential model} von Keras~\cite{keras:SequentialModel} verwendet um die einzelnen Schichten abzubilden. Da es nicht alle benötigten Netzschichten in Keras  implementiert sind mussten zudem für die ResBlock und ReflectionPadding2D Schichten, siehe \cref{sub:cyclegan}, sowie für Tanh,  eigene Klassen geschrieben werden, welche von einer abstrakten Keras Schicht erben. 
