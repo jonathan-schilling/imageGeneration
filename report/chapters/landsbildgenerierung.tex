@@ -14,15 +14,14 @@
  GAN-Architekturen umgesetzt, das \emph{\gls{acr-DCGAN}}
  \cite{radford2015unsupervised} zusammen mit dessen Erweiterung zum
  \emph{\gls{acr-SNDCGAN}} \cite{miyato2018spectral}, sowie das
- \emph{\gls{acr-WGAN}} \cite{arjovsky2017wasserstein}. Dies Erlaubt einen
- Vergleich der Vorgehensweisen und der Ergebnisse, siehe dazu \cref{evalGen}.
- % TODO: Ist das so?
- 
+ \emph{\gls{acr-WGAN}} \cite{arjovsky2017wasserstein}. 
+
 \subsection{SNDCGAN}\label{subsec:mod:sndc} % Joshua
 \label{sub:sndcgan}
 
-Das erste im Projekt umgesetzte \gls{acr-GAN} Modell, ist das \gls{acr-SNDCGAN}
-genannte Modell, welches in dieser Form aus dem Übersichts-Paper
+Das erste im Projekt umgesetzte \gls{acr-GAN} Modell, ist das \gls{acr-SNDCGAN},
+welches
+in dieser Form aus dem Übersichts-Paper
 \citetitle{kurach2018gan} von \citeauthor{kurach2018gan} \cite{kurach2018gan}
 übernommen ist. Dieses Modell ist eine Erweiterung des im Paper
 \citetitle{radford2015unsupervised} von \citeauthor{radford2015unsupervised}
@@ -155,7 +154,7 @@ Projekt-Implementierung entsprechend des \gls{acr-SNDCGAN} Papers die
 ursprüngliche Standard-Kostenfunktion aus dem Paper von
 \citeauthor{goodfellow2014generative} \cite{goodfellow2014generative} verwendet.
 Diese ist gegeben als $V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}(x)} [\log
-D(x)] + \mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$ \cite{goodfellow2014generative}. Dabei wird davon ausgegangen, dass der
+D(x)] + \mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$. Dabei wird davon ausgegangen, dass der
 Discriminator $D$ eine $1$ ausgibt, wenn er der Ansicht ist, dass das
 eingegebene Bild sicher ein original Bild der Daten ist. Damit ist das Ziel des
 Discriminators $V(D,G)$ zu maximieren, während der Generator die Funktion
@@ -177,8 +176,8 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
 \cite{kingma2014adam}.
  
  \subsection{Wasserstein-GAN} % Tim
- Das \gls{acr-WGAN} wurde 2017 in \citetitle{arjovsky_wasserstein_2017}
- \cite{arjovsky_wasserstein_2017} vorgestellt. Dabei verwendet dieses einen
+ Das \gls{acr-WGAN} wurde 2017 in \citetitle{arjovsky2017wasserstein}
+ \cite{arjovsky2017wasserstein} vorgestellt. Dabei verwendet dieses einen
  alternativen Weg um den Generator zu trainieren, welcher die Datenverteilung
  der gegebenen Trainingsdaten besser approximieren soll. Anstatt einen
  Discriminator zu verwenden, der Bilder in real oder nicht real kategorisiert,
@@ -197,7 +196,7 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
  Ressourcen zu sparen, da die Architektur noch nicht optimiert wurde. Der Critic
  verwendet ebenfalls Convolutions, und fügt diese am Ende zu einem linearen Output zusammen \cite{brownlee_how_2019-1}.
  Außerdem werden die Gewichte im Critic zwischen -0.01 und 0.01 beschränkt
- \cite{arjovsky_wasserstein_2017}. 
+ \cite{arjovsky2017wasserstein}. 
  
  \paragraph{Kostenfunktion} Das \gls{acr-WGAN} verwendet den Wasserstein-Loss,
  welcher versucht den Abstand zwischen realen und generierten Bildern zu
@@ -212,7 +211,7 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
 
 \paragraph{Training} Einer der großen Vorteile des \gls{acr-WGAN}s ist, dass es
 keinen Discriminator gibt, der dem Generator \enquote{davonläuft}. Ein besserer
-Critic sorgt für bessere Ergebnisse \cite{arjovsky_wasserstein_2017}.
+Critic sorgt für bessere Ergebnisse \cite{arjovsky2017wasserstein}.
 Deshalb wird beim Training der Critic mehr trainiert, als der Generator, in
 diesem Fall fünf mal so oft. Zudem wird RMSProp statt Adam als Optimizer
 verwendet \cite{arjovsky2017wasserstein}.
@@ -286,7 +285,7 @@ verwendet \cite{arjovsky2017wasserstein}.
  \subsection{SNDCGAN: Anpassung von Parametern} % Jonathan
  
  Eine große Herausforderung in diesem Projekt war die richtige Wahl der
- Parameter für das Training, sodass das neuronale Netz möglichst gut
+ Parameter für das Training. Diese müssen so gewählt werden, dass das neuronale Netz möglichst gut
  initialisiert wird, um dann gute Ergebnisse zu produzieren. Dabei war das
  Hauptproblem die fehlende Rechenkapazität, um verschiedene Konfigurationen
  ausführlich auszutesten, anschließend mit einer wissenschaftlichen
