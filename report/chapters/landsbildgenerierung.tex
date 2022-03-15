@@ -78,35 +78,10 @@ genannt, nicht um Deconvolutions (d.\,h. die mathematische Umkehrung der
 Convolution) im engeren Sinne; allerdings wird in der Literatur häufig dennoch
 von Convolutions gesprochen, was hier übernommen wurde \cites[vgl.][S.
 20]{dumoulin2016guide}[vgl.][S. 4]{radford2015unsupervised}.} um aus dem
-eindimensionalen Zufallsvektor schrittweise ein Farbbild zu erzeugen.
-
-\paragraph{Kostenfunktion} Als Kostenfunktion wird für die
-Projekt-Implementierung entsprechend des \gls{acr-SNDCGAN} Papers die
-ursprüngliche Standard-Kostenfunktion aus dem Paper von
-\citeauthor{goodfellow2014generative} \cite{goodfellow2014generative} verwendet.
-Diese ist gegeben als $V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}(x)} [\log
-D(x)] + \mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$ \cite[S.
-3]{goodfellow2014generative}. Dabei wird davon ausgegangen, dass der
-Discriminator $D$ eine $1$ ausgibt, wenn er der Ansicht ist, dass das
-eingegebene Bild sicher ein original Bild der Daten ist. Damit ist das Ziel des
-Discriminators $V(D,G)$ zu maximieren, während der Generator die Funktion
-minimieren möchte: $\min_{G} \max_{D} V(D,G)$. In der Praxis des Projektes wird,
-ebenfalls dem \gls{acr-SNDCGAN} und \gls{acr-GAN} Papern folgend \cites[S.
-3]{goodfellow2014generative}[S. 6]{miyato2018spectral}, statt der Minimierung
-von $\log(1-D(G(z)))$, $\log D(G(z))$ maximiert, dies verringert das Problem von
-verschwindenden Gradienten im frühen Training.
-
-\paragraph{Training} Das Training der Projekt Implementierung folgt im
-wesentlichen dem von \citeauthor{goodfellow2014generative}
-\cite{goodfellow2014generative}. Der Generator und Discriminator werden jeweils
-abwechselnd trainiert, wobei zuerst der Generator eine Batch von Beispiel-Daten
-erzeugt, die anschließend vom Discriminator bewertet werden. Dies wird zuerst
-für die Kosten des Generators verwendet und anschließend, zusammen mit einer
-Bewertung von Originaldaten durch den Discriminator, für das Training des
-Discriminators. Den Lernverfahren der einbezogenen Paper
-\cite{radford2015unsupervised,miyato2018spectral,kurach2018gan} folgend,
-verwendet die Implementierung des Projektes den Adam-Optimizer
-\cite{kingma2014adam}.
+eindimensionalen Zufallsvektor schrittweise ein Farbbild zu erzeugen. Der
+Bildgenerierungsprozess des Generators ist auch auch in \cref{img:sndcgan}
+graphisch dargestellt, hier wird aus einem Zufallsvektor der Größe $128$
+schrittweise ein $64 \times 64$ Bild erzeugt.
 
 \begin{table}[]
   \caption{SNDCGAN Architektur}
@@ -169,6 +144,41 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
     Eingabe-Bild als farbiges Bild drei Kanäle hat.
   \end{center}
 \end{table}
+
+\begin{figure}
+  \caption{SNDCGAN Architektur des Generators}
+  \label{img:sndcgan}
+  \centering
+  \includegraphics[width=\textwidth]{images/cnn3.pdf}
+\end{figure}
+
+\paragraph{Kostenfunktion} Als Kostenfunktion wird für die
+Projekt-Implementierung entsprechend des \gls{acr-SNDCGAN} Papers die
+ursprüngliche Standard-Kostenfunktion aus dem Paper von
+\citeauthor{goodfellow2014generative} \cite{goodfellow2014generative} verwendet.
+Diese ist gegeben als $V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}(x)} [\log
+D(x)] + \mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$ \cite[S.
+3]{goodfellow2014generative}. Dabei wird davon ausgegangen, dass der
+Discriminator $D$ eine $1$ ausgibt, wenn er der Ansicht ist, dass das
+eingegebene Bild sicher ein original Bild der Daten ist. Damit ist das Ziel des
+Discriminators $V(D,G)$ zu maximieren, während der Generator die Funktion
+minimieren möchte: $\min_{G} \max_{D} V(D,G)$. In der Praxis des Projektes wird,
+ebenfalls dem \gls{acr-SNDCGAN} und \gls{acr-GAN} Papern folgend \cites[S.
+3]{goodfellow2014generative}[S. 6]{miyato2018spectral}, statt der Minimierung
+von $\log(1-D(G(z)))$, $\log D(G(z))$ maximiert, dies verringert das Problem von
+verschwindenden Gradienten im frühen Training.
+
+\paragraph{Training} Das Training der Projekt Implementierung folgt im
+wesentlichen dem von \citeauthor{goodfellow2014generative}
+\cite{goodfellow2014generative}. Der Generator und Discriminator werden jeweils
+abwechselnd trainiert, wobei zuerst der Generator eine Batch von Beispiel-Daten
+erzeugt, die anschließend vom Discriminator bewertet werden. Dies wird zuerst
+für die Kosten des Generators verwendet und anschließend, zusammen mit einer
+Bewertung von Originaldaten durch den Discriminator, für das Training des
+Discriminators. Den Lernverfahren der einbezogenen Paper
+\cite{radford2015unsupervised,miyato2018spectral,kurach2018gan} folgend,
+verwendet die Implementierung des Projektes den Adam-Optimizer
+\cite{kingma2014adam}.
  
  \subsection{Wasserstein-GAN} % Tim
  Das \gls{acr-WGAN} wurde 2017 in \citetitle{arjovsky_wasserstein_2017}
