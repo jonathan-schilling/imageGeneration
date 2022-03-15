@@ -10,7 +10,7 @@
  Wie in \cref{GANs} beschreiben, gibt es im Bereich der \gls{acr-GAN}s
  zahlreiche Varianten und Anpassungen, die versuchen, verschiedene Schwachstellen
  des Konzeptes auszugleichen. Um dieser Vielzahl von Möglichkeiten zu begegnen,
- wurden in diesem Projekt zwei weit verbreitete \cite[S. 3]{kurach2018gan}
+ wurden in diesem Projekt zwei weit verbreitete \cite{kurach2018gan}
  GAN-Architekturen umgesetzt, das \emph{\gls{acr-DCGAN}}
  \cite{radford2015unsupervised} zusammen mit dessen Erweiterung zum
  \emph{\gls{acr-SNDCGAN}} \cite{miyato2018spectral}, sowie das
@@ -38,7 +38,7 @@ Trainingsprozedere ergänzt.
 ursprünglich \cite[vgl.][]{goodfellow2014generative} auf vollständig verbundenen
 Schichten (\emph{fully connected} bzw. \emph{Multilayer Perceptron (MLP)})
 basierende \gls{acr-GAN}-Architektur mit dem speziell für Bildverarbeitung
-attraktiven \gls{acr-CNN} zu verbinden \cite[S. 1]{radford2015unsupervised}.
+attraktiven \gls{acr-CNN} zu verbinden \cite{radford2015unsupervised}.
 Dabei nutzt das \gls{acr-DCGAN} bestimmte (zu der Zeit) aktuelle Entwicklungen
 der \gls{acr-CNN}s \cite[vgl.][S. 3]{radford2015unsupervised}: Auf
 deterministische Pooling-Funktionen wird zugunsten von \emph{strided
@@ -50,8 +50,7 @@ eins) auf die meisten Schichten angewandt und es wird \emph{ReLU} als
 Aktivierungsfunktion (bis auf die Ausgabeschicht, die tanh verwendet) für den
 Generator bzw. \emph{Leaky ReLU} für den Discriminator verwendet.
 \gls{acr-DCGAN} beansprucht für sich, vor allem durch diese Änderungen, das
-Training im Vergleich zu anderen Ansätzen stabilisieren zu können \cite[S.
-9]{radford2015unsupervised}.
+Training im Vergleich zu anderen Ansätzen stabilisieren zu können \cite{radford2015unsupervised}.
 
 \paragraph{\gls{acr-SNDCGAN}} Das Paper \citetitle{miyato2018spectral}
 \cite{miyato2018spectral} führt hauptsächlich eine neue
@@ -59,12 +58,11 @@ Gewichtsnormalisierungs-Technik ein, die aber für die
 Pro\-jekt-Imp\-le\-men\-tier\-ung hier nicht relevant ist. Allerdings führt das
 Paper auch einige geringe Änderungen an der Architektur des \gls{acr-DCGAN}s
 ein, die für die Architektur des Projektes übernommen wurde. Dazu gehört
-hauptsächlich die Nutzung eines acht-schichtigen Discriminators \cite[S.
-3]{kurach2018gan}. Dies wird von \citeauthor{kurach2018gan} \cite{kurach2018gan}
+hauptsächlich die Nutzung eines acht-schichtigen Discriminators \cite{kurach2018gan}. Dies wird von \citeauthor{kurach2018gan} \cite{kurach2018gan}
 als \gls{acr-SNDCGAN} bezeichnet. Das \gls{acr-SNDCGAN} beansprucht für sich vor
 allem diversere Datenpunkte zu erzeugen (d.\,h. den Zufall des Zufallsvektors
 besser umzusetzen) und einen besseren \gls{acr-IS} (eine Metrik für das
-Beurteilen von \gls{acr-GAN}s) zu erreichen \cite[S. 11]{miyato2018spectral}.
+Beurteilen von \gls{acr-GAN}s) zu erreichen \cite{miyato2018spectral}.
 
 \paragraph{Architektur} Die Architektur des \gls{acr-SNDCGAN}s, so wie es in
 diesem Projekt umgesetzt wird, stammt aus \citetitle{kurach2018gan}
@@ -157,14 +155,12 @@ Projekt-Implementierung entsprechend des \gls{acr-SNDCGAN} Papers die
 ursprüngliche Standard-Kostenfunktion aus dem Paper von
 \citeauthor{goodfellow2014generative} \cite{goodfellow2014generative} verwendet.
 Diese ist gegeben als $V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}(x)} [\log
-D(x)] + \mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$ \cite[S.
-3]{goodfellow2014generative}. Dabei wird davon ausgegangen, dass der
+D(x)] + \mathbb{E}_{z \sim p_{z}(z)} [\log (1-D(G(z)))]$ \cite{goodfellow2014generative}. Dabei wird davon ausgegangen, dass der
 Discriminator $D$ eine $1$ ausgibt, wenn er der Ansicht ist, dass das
 eingegebene Bild sicher ein original Bild der Daten ist. Damit ist das Ziel des
 Discriminators $V(D,G)$ zu maximieren, während der Generator die Funktion
 minimieren möchte: $\min_{G} \max_{D} V(D,G)$. In der Praxis des Projektes wird,
-ebenfalls dem \gls{acr-SNDCGAN} und \gls{acr-GAN} Papern folgend \cites[S.
-3]{goodfellow2014generative}[S. 6]{miyato2018spectral}, statt der Minimierung
+ebenfalls dem \gls{acr-SNDCGAN} und \gls{acr-GAN} Papern folgend \cites{goodfellow2014generative}{miyato2018spectral}, statt der Minimierung
 von $\log(1-D(G(z)))$, $\log D(G(z))$ maximiert, dies verringert das Problem von
 verschwindenden Gradienten im frühen Training.
 
@@ -216,10 +212,10 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
 
 \paragraph{Training} Einer der großen Vorteile des \gls{acr-WGAN}s ist, dass es
 keinen Discriminator gibt, der dem Generator \enquote{davonläuft}. Ein besserer
-Critic sorgt für bessere Ergebnisse \cite[S. 8]{arjovsky_wasserstein_2017}.
+Critic sorgt für bessere Ergebnisse \cite{arjovsky_wasserstein_2017}.
 Deshalb wird beim Training der Critic mehr trainiert, als der Generator, in
 diesem Fall fünf mal so oft. Zudem wird RMSProp statt Adam als Optimizer
-verwendet \cite[S. 12]{arjovsky2017wasserstein}.
+verwendet \cite{arjovsky2017wasserstein}.
  
   \section{Implementierung} % Jonathan
   \label{sec:gen_impl}
