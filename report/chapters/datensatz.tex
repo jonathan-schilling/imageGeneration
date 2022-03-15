@@ -5,7 +5,7 @@ Eine der größten Herausforderungen noch vor dem Trainieren eines GANs ist das
 Beschaffen eines Datensatzes.  Dies liegt vor allem daran, dass die
 Ergebnisqualität unter wenigen Daten leidet. Laut
 \citetitle{noauthor_nvidia_2020} \cite{noauthor_nvidia_2020} werden für ein GAN
-zwischen 50.000 und 100.000 Trainingsbilder benötigt um hoch qualitative
+zwischen 50.000 und 100.000 Trainingsbilder benötigt, um hoch qualitative
 Ergebnisse zu erzielen. Bei wenigen Bildern kann es leichter dazu kommen, dass
 der Discriminator auswendig lernt. Für das Generieren wurden somit möglichst
 viele Landschaftsbilder gesucht. Bei Bildern für das manipulierende GAN, wurden
@@ -15,7 +15,7 @@ Kaggle, einer auf Data Science spezialisierte Plattform, auf der viele
 Datensätze zu finden sind, hat gezeigt, dass ein Datensatz in der hier
 benötigten Dimension schwer aufzutreiben ist.
 
-\section{Bilderdatensatz mit Flickr} %Tim
+\section{Bilderdatensatz mit Flickr}\label{flickr} %Tim
 Flickr ist ein online Fotodienst, bei dem Nutzer, die sich einen Account
 erstellt haben, ihre Bilder hochladen können, um sie mit anderen zu teilen.
 Andere Benutzer haben nun die Möglichkeit, diese zu kommentieren, zu bewerten
@@ -24,9 +24,9 @@ Funktion, damit Bilder von Flickr als Datensatz verwendet werden können, ist,
 dass Bildautoren die Fotos mit Tags versehen können. Dadurch bietet Flickr
 theoretisch zugriff auf Millionen von Hand kategorisierte Bilder. 
 
-Ein Manuelles herunterladen von mehreren Tausend Landschaftsbildern ist
+Ein manuelles Herunterladen von mehreren Tausend Landschaftsbildern ist
 allerdings viel zu aufwendig, weshalb das Herunterladen nur mithilfe der Flickr
-API sinnvoll ist. Dabei setzt man jedoch großes Vertrauen auf die von anderen
+API\footnote{\url{www.flickr.com/services/api/}} sinnvoll möglich ist. Dabei setzt man jedoch großes Vertrauen auf die von anderen
 Nutzern gesetzten Kategorien (Tags). Nach dem Herunterladen von eintausend
 Bildern mit dem Tag \enquote{Landscape} wurde sichtbar, dass die Tags nicht
 zuverlässig genug sind. Es gab unscharfe und monochrome Bilder, Fotos, auf denen
@@ -35,7 +35,7 @@ Landschaftsbildern war viel zu niedrig. Eine Lösung für dieses Problem war es
 nicht nur nach Bildern mit dem Tag  \enquote{Landscape} zu suchen, sondern auch
 gewünschte Objekte durch eine Tag-Blacklist auszusortieren. Somit werden Bilder
 mit Tags wie \enquote{City}, \enquote{Monochrome}, \enquote{Selfie} usw. noch
-vor dem Download aussortiert (Die genaue Liste an aussortierten Tags ist in der
+vor dem Download aussortiert. (Die genaue Liste an aussortierten Tags ist in der
 Datei \texttt{tagsBlack.csv} zu finden). Dies liefert deutlich bessere
 Ergebnisse, wobei dennoch einige Bilder nicht korrekt getaggt sind, wogegen
 allerdings nicht viel unternommen werden kann. Zudem stellte sich heraus, dass
@@ -97,7 +97,7 @@ Skript heruntergeladen wurde, kann es mit dem folgenden Befehl ausgeführt
 werden:
 
 \begin{lstlisting}[language=bash,caption={Download OpenImagesV4}]
-	python downloader.py <file_with_image_ids> --download_folder=<path>
+	python downloader.py <file_with_image_ids> --download_folder=<path> \
 	--num_processes=5
 \end{lstlisting}
 
@@ -108,7 +108,7 @@ Your Data\grqq\ nicht in einem kompatiblen Format gespeichert werden, ist an
 dieser Stelle ein Hilfsskript nötig, das die IDs entsprechend anpasst.
 
 
-Viele der heruntergeladenen Bildern hatte eine schlechte Qualität, daher waren
+Viele der heruntergeladenen Bilder hatten eine schlechte Qualität, daher waren
 zwei weitere Vorbereitungsschritte notwendig. Zuerst wurden alle Bilder
 gesichtet und jedes, das eine schlechte Auflösung, zu viele Gebäude, starken
 Nebel o. Ä. zeigte, wurde manuell aussortiert. Dadurch reduzierte sich die
@@ -153,8 +153,8 @@ Landschaftsbildern durchzuführen. Dafür wäre ein Datensatz notwendig gewesen,
 der zum Beispiel Landschaften am Tag und Landschaften bei Nacht beinhaltet,
 sodass ein neuronales Netz ein Bild aus einer Domäne in die jeweils andere
 transferieren kann. Dieser Datensatz sollte mithilfe von Flickr erstellt werden.
-Da das Downloaden von ausreichend vielen Bildern über die Flickr API nicht wie
-erwartet funktioniert hat, musste ein anderer Datensatz gefunden werden, anhand
+Da das Herunterladen von ausreichend vielen Bildern über die Flickr API nicht wie
+erwartet funktioniert hat (siehe \cref{flickr}), musste ein anderer Datensatz gefunden werden, anhand
 dessen die Netze trainiert werden können.
 
 Dabei ist die Wahl auf den Oxford-IIIT Pet Datensatz~\cite{parkhi12a} gefallen,
@@ -166,11 +166,11 @@ heruntergeladen.
 
 \section{Datensatz Import und Verwendung}%Tim
 Um die heruntergeladenen Bilder schlussendlich zum Trainieren zu verwenden,
-wurde die Keras Methode  \texttt{image\_dataset\_from\_directory} verwendet.
+wurde die Keras-Methode  \texttt{image\_dataset\_from\_directory} verwendet.
 Diese kann Bilder direkt aus einem Verzeichnis laden, auf ein Seitenverhältnis
 und eine Bildgröße zuschneiden und in Batches einteilen. Um den Datensatz zu
 normalisieren, wurde ein Rescaling-Layer verwendet, welcher die Bilder auf Werte
-zwischen -1 und 1 abbildet. Um die spätere Lernperformance zu optimieren, wurde
+zwischen $-1$ und $1$ abbildet. Um die spätere Lernperformance zu optimieren, wurde
 der Datensatz zudem gecached und durch \enquote{prefetch} pipelinebar gemacht.
 Außerdem wird der Datensatz bei jedem Durchgang gemischt, um bessere
 Lernergebnisse zu erziehen. 
