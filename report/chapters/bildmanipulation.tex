@@ -5,11 +5,11 @@
  
  \section{Modelle} % Dani
  Für das manipulieren von Bilder gibt es verschieden Ansätze. Eingegrenzt wurde diese durch den Datensatz, da die Bilder nicht in Paaren vorliegen, es also zu einem Eingabebild keine entsprechendes Bild in der Zieldomain gibt und das Verfahren unsupervised sein soll. %vllt warum unsupervised?
- In Rahmen dieser Arbeit wurden sich mit  zwei Ansätze genauer beschäftigt. Der erste Ansatz ist der des CycleGANs \cite{zhu_unpaired_2020}, welches mittels des cycle consistency losses versucht Bilder zwischen zwei Domänen zu transferieren. Der zweite Ansatz heißt  \gls{acr-funit} \cite{liu_few-shot_2019} der sich am Vorgehen des Menschen Gehirns orientiert und versucht mit wenigen Bilder aus ähnlichen Domänen die Übersetzung zu lernen.
+ In Rahmen dieser Arbeit wurden sich mit  zwei Ansätze genauer beschäftigt. Der erste Ansatz ist der des CycleGANs \cite{zhu2017unpaired}, welches mittels des cycle consistency losses versucht Bilder zwischen zwei Domänen zu transferieren. Der zweite Ansatz heißt  \gls{acr-funit} \cite{liu2019few} der sich am Vorgehen des Menschen Gehirns orientiert und versucht mit wenigen Bilder aus ähnlichen Domänen die Übersetzung zu lernen.
  
  \subsection{CycleGAN}% Dani
  \label{sub:cyclegan}
- Durch das Fehlen von gepaarten Bilder fehlt eine Möglichkeit zu überprüfen, ob der Generator den Inhalt des Bildes bei behält. \citeauthor{zhu_unpaired_2020} \cite{zhu_unpaired_2020} lösen diese Problem durch einfügen einer weiteren Bedingung: Bilder sollen, wenn sie übersetzt wurden und anschließen wieder zurück umgewandelt werden, gleich sein bzw. sehr ähnlich. Dies wird mittels des cycle consistency loss umgesetzt. 
+ Durch das Fehlen von gepaarten Bilder fehlt eine Möglichkeit zu überprüfen, ob der Generator den Inhalt des Bildes bei behält. \citeauthor{zhu2017unpaired} \cite{zhu2017unpaired} lösen diese Problem durch einfügen einer weiteren Bedingung: Bilder sollen, wenn sie übersetzt wurden und anschließen wieder zurück umgewandelt werden, gleich sein bzw. sehr ähnlich. Dies wird mittels des cycle consistency loss umgesetzt. 
  Dazu benötigt man zwei GANs, eins welches aus der Eingabedomäne in die Zieldomäne übersetzt, $G: X \rightarrow Y$ und ein anderes welches das Gegenteil durchführt,   $F: Y \rightarrow X$.
  Der cycle consistency loss gibt an wie groß der Verlust zwischen dem ursprünglichen Bild und der Ausgabe nach dem manipulieren beider GANs. 
  Das Ziel ist es $F(G(X))\approx X$ sowie $G(F(Y))\approx Y$ durchzusetzen. Wie in Abbildung \ref{fig:cylce_loss} zusehen, wobei der Verlust jeweils zwischen $x$, $\hat{x}$ und $y$,$\hat{y}$ berechnet wird.
@@ -51,7 +51,7 @@
  	\label{fig:cylce_loss}
  \end{figure}
  
- Die Architektur der genutzten Netze stammt von \citeauthor{johnson2016perceptual} \cite{johnson2016perceptual}. Für den Generator gibt es zwei Varianten, die eine für Eingabegröße $128 \times 128$ mit 6 Residual Blöcken und die andere für Eingabegröße $256 \times 256$ mit 9 Residual Blöcken (ResBlock), diese Blöcke führen zwei Convolution mit gleicher Anzahl an Filter aus. Als Normalisierung wird Instance Normalisierung genutzt, die ist eine Erweiterung der Batch Normalisierung \cite{ulyanov_instance_2016}. In \cref{tab:cycleGAN} ist der Aufbau der Generators und der Discriminatoren für die Variante mit Eingabegröße $256 \times 256$ zusehen.
+ Die Architektur der genutzten Netze stammt von \citeauthor{johnson_perceptual_2016} \cite{johnson_perceptual_2016}. Für den Generator gibt es zwei Varianten, die eine für Eingabegröße $128 \times 128$ mit 6 Residual Blöcken und die andere für Eingabegröße $256 \times 256$ mit 9 Residual Blöcken (ResBlock), diese Blöcke führen zwei Convolution mit gleicher Anzahl an Filter aus. Als Normalisierung wird Instance Normalisierung genutzt, die ist eine Erweiterung der Batch Normalisierung \cite{ulyanov_instance_2016}. In \cref{tab:cycleGAN} ist der Aufbau der Generators und der Discriminatoren für die Variante mit Eingabegröße $256 \times 256$ zusehen.
  
  \begin{table}[]
  	\caption{CycleGAN Architektur}
@@ -118,18 +118,18 @@
  	\end{center}
  	\begin{center}
  		\bigskip
- 		\emph{Quelle:} Von \cite[]{zhu_unpaired_2020} übernommen.\\
+ 		\emph{Quelle:} Von \cite{zhu2017unpaired} übernommen.\\
  		\emph{Legende:} Der Kernel ist beschrieben im Format $[\text{x\_Größe},
  		\text{y\_Größe}, \text{Schrittweite}]$;IN steht für InstanceNorm; LeakyReLu hat eine Neigung von $0,2$;
  	\end{center}
  \end{table}
  
  
- Durch Evaluierungen und Vergleiche konnten \citeauthor{zhu_unpaired_2020} beobachten, dass die wiederhergestellten Bilder und die echten Bilder ein gute Ähnlichkeit aufwiesen. Vor allem bei Manipulationen bei denen Farben und Texturen geändert werden. Genau diese Veränderungen sollen in dieser Arbeit mit Landschaftsbilder durchgeführt werden. 
+ Durch Evaluierungen und Vergleiche konnten \citeauthor{zhu2017unpaired} beobachten, dass die wiederhergestellten Bilder und die echten Bilder ein gute Ähnlichkeit aufwiesen. Vor allem bei Manipulationen bei denen Farben und Texturen geändert werden. Genau diese Veränderungen sollen in dieser Arbeit mit Landschaftsbilder durchgeführt werden. 
  
  \subsection{FUNIT}% Dani
  \label{sub:funit}
- Der Ansatz von \citeauthor{liu_few-shot_2019} \cite{liu_few-shot_2019}  geht das Problem an, das es oft nicht genug Bilder in der Eingabe- und Zielklassen gibt. Es wurde ein Ansatz mit wenigen Versuche (few-shot) entwickelt. Hierbei wird das Modell mit Bilder aus verschieden Eingabeklassen trainiert und erst beim Testen werden die Bilder der Zielklasse genutzt.
+ Der Ansatz von \citeauthor{liu2019few} \cite{liu2019few}  geht das Problem an, das es oft nicht genug Bilder in der Eingabe- und Zielklassen gibt. Es wurde ein Ansatz mit wenigen Versuche (few-shot) entwickelt. Hierbei wird das Modell mit Bilder aus verschieden Eingabeklassen trainiert und erst beim Testen werden die Bilder der Zielklasse genutzt.
  Dazu wurde eine neues Netzwerkdesign mit dem gegnerischen Training von GANs vereinigt, der Name diese Modells ist  \acrfull{acr-funit}. Dieses Netzwerk besteht aus insgesamt vier Netzen, drei im Generator und eins im Discriminator. Der Generator $G$ bekommt als Eingabe ein Bild $x$ aus der Klasse $C_x$ und ein paar Bilder $y_1,\dots,y_n$ aus einer anderen Eingabeklasse $C_y$. Die Ausgabe $\hat{x}$ sollte dann den Inhalt von Bild $x$ in dem Aussehen der Klasse $K_y$ sein. 
  Die drei Netze die zusammen den Generator ergeben heißen Inhalt Encoder$E_x$, Klassen Encoder $E_y$ und Decoder $F_x$.
  Der Inhalt des Eingabebilds $x$ wird durch den Inhalt Encoder in eine räumliche Feature-Map umgewandelt. Die andern Eingabebilder also  $y_1,\dots,y_n$ werden in den Klassen Encoder gegeben, der  jedes Bild auf eine latenten mittel Vektor ( intermediate latent vector) abbildet und anschließend den Mittelwert über alle Vektoren berechnet, zu sehen in Abbildung \ref{fig:funitmodelsimple}. 
@@ -144,7 +144,7 @@
  
  wobei $ \mathcal{L}_{GAN}(D,G)$ für den Loss des gesamten GANs,$ \mathcal{L}_R(G)$ den der Bildinhaltswiederherstellung und $\mathcal{L}_{F}(G) $ den der Feature-Abstimmung  steht. 
  
- Bei vergleichen mit anderen gängigen Ansätzen schnitt  \gls{acr-funit}  besser ab und benötigt dabei eine kleineren Datensatz \cite{liu_few-shot_2019}. Diese beiden Vorteile bieten sich für die Manipulation die in dieser Arbeit durchgeführt werden soll an.
+ Bei vergleichen mit anderen gängigen Ansätzen schnitt  \gls{acr-funit}  besser ab und benötigt dabei eine kleineren Datensatz \cite{liu2019few}. Diese beiden Vorteile bieten sich für die Manipulation die in dieser Arbeit durchgeführt werden soll an.
  
  \begin{figure}[h]
  	\centering
@@ -173,7 +173,7 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
  \paragraph{Perceptual Distance} Als Metrik für die Evaluierung der
  Bildmanipulation wird eine \emph{\gls{acr-PD}} \cite{pang2021image} verwendet, die aus dem
  \emph{Perceptual Feature Reconstruction Loss} von
- \citeauthor{johnson2016perceptual} \cite{johnson2016perceptual} abgeleitet ist. Dazu wird, ähnlich der
+ \citeauthor{johnson_perceptual_2016} \cite{johnson_perceptual_2016} abgeleitet ist. Dazu wird, ähnlich der
  \gls{acr-FID}, die Aktivierung einer versteckten Schicht eines
  Bildklassifizierungsnetzes verglichen. In diesem Fall wird die 16-Schichten
  Variante des \emph{VGG} Netzes \cite{simonyan2014very} verwendet, welches auf
@@ -186,6 +186,6 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
  Convolution Schicht eines Klassifikationsnetzes, wie sie hier verwendet wird,
  ermöglicht es Bilder auf die Unterschiede im Inhalt zu bewerten, wobei
  Unterschiede im Stil weitestgehend ignoriert werden
- \cite{johnson2016perceptual,pang2021image}. Daher ist diese Distanz als
+ \cite{johnson_perceptual_2016,pang2021image}. Daher ist diese Distanz als
  Metrik geeignet, um die erfolgreiche Übertragung des Bildinhaltes durch ein
  \gls{acr-I2I} GAN zu bewerten.
