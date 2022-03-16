@@ -338,7 +338,7 @@ verwendet \cite{arjovsky2017wasserstein}.
  GAN lernen konnte.
  
  \section{Evaluierung}\label{evalGen} Nachdem das Training des implementierten
-  GANs erfolgreich abgeschlossen wurde, erfolgt die Evaluation der Ergebnisse.
+  GANs erfolgreich abgeschlossen wurde, siehe \cref{fig:landschaftsbilder}, erfolgt die Evaluation der Ergebnisse.
   Dafür wurden zwei verschieden Methoden genutzt. Die Erste betrachtet den
   durchschnittlichen Loss des Generators und Discriminators, zu sehen in
   Abbildung \ref{fig:plot_losses_gen}.  Hier ist zu erkennen, dass zu Beginn
@@ -347,6 +347,14 @@ verwendet \cite{arjovsky2017wasserstein}.
   werden, dass die Netze ihre Aufgabe erfüllen, nämlich die Losse beider Netze
   zu minimieren. In den letzten hundert Epochen ist eine steigende Tendenz zu
   beobachten, die auf ein Overfitting zurückgeführt werden kann.
+ 
+ \begin{figure}
+ 	\centering
+ 	\includegraphics[width=\linewidth]{images/Landschaftsbilder}
+ 	\caption[Ergebnisse Generierte Landschaftsbilder]{Sammlung von 21 Bilder die durch das SNDCGAN produziert wurden.}
+ 	\label{fig:landschaftsbilder}
+ \end{figure}
+ 
  
  \begin{figure}[t]
  	\centering
