@@ -176,8 +176,9 @@ verwendet die Implementierung des Projektes den Adam-Optimizer
 \cite{kingma2014adam}.
  
  \subsection{Wasserstein-GAN} % Tim
- Das \gls{acr-WGAN} wurde 2017 in \citetitle{arjovsky2017wasserstein}
- \cite{arjovsky2017wasserstein} vorgestellt. Dabei verwendet dieses einen
+ Das zweite generierende Modell des Projektes ist das \gls{acr-WGAN},
+ dieses wurde 2017 in \citetitle{arjovsky2017wasserstein}
+ \cite{arjovsky2017wasserstein} vorgestellt. Dabei verwendet das Modell einen
  alternativen Weg um den Generator zu trainieren, welcher die Datenverteilung
  der gegebenen Trainingsdaten besser approximieren soll. Anstatt einen
  Discriminator zu verwenden, der Bilder in real oder nicht real kategorisiert,
@@ -337,21 +338,23 @@ verwendet \cite{arjovsky2017wasserstein}.
  allerdings war damit in den Beispielbildern mehr Inhalt zu erkennen, den das
  GAN lernen konnte.
  
- \section{Evaluierung}\label{evalGen} Nachdem das Training des implementierten
-  GANs erfolgreich abgeschlossen wurde, siehe \cref{fig:landschaftsbilder}, erfolgt die Evaluation der Ergebnisse.
-  Dafür wurden zwei verschieden Methoden genutzt. Die Erste betrachtet den
+ \section{Evaluierung}\label{evalGen}
+  Eine Auswahl von Beispielbildern des vollständig
+  trainierten \gls{acr-SNDCGAN}s, zeigt \cref{fig:landschaftsbilder}. Neben diesen (nur
+  subjektiv zu bewertenden) Beispielbildern, werden in diesem Abschnitt zwei verschieden
+  Methoden zur Evaluation des \gls{acr-SNDCGAN}s vorgestellt. Die Erste betrachtet den
   durchschnittlichen Loss des Generators und Discriminators, zu sehen in
   Abbildung \ref{fig:plot_losses_gen}.  Hier ist zu erkennen, dass zu Beginn
   Spitzen von großen Losses auftreten, diese sich aber im Verlauf zu späteren
   Epochen auspendeln und zu einem Minimum tendieren. Daraus kann gefolgert
   werden, dass die Netze ihre Aufgabe erfüllen, nämlich die Losse beider Netze
   zu minimieren. In den letzten hundert Epochen ist eine steigende Tendenz zu
-  beobachten, die auf ein Overfitting zurückgeführt werden kann.
+  beobachten, diese kann auf ein Overfitting zurückgeführt werden.
  
  \begin{figure}
  	\centering
  	\includegraphics[width=\linewidth]{images/Landschaftsbilder}
- 	\caption[Ergebnisse Generierte Landschaftsbilder]{Sammlung von 21 Bilder die durch das SNDCGAN produziert wurden.}
+ 	\caption[Ergebnisse Generierte Landschaftsbilder]{Sammlung von 21 Bildern, die durch das SNDCGAN produziert wurden.}
  	\label{fig:landschaftsbilder}
  \end{figure}
  
@@ -359,34 +362,33 @@ verwendet \cite{arjovsky2017wasserstein}.
  \begin{figure}[t]
  	\centering
  	\includegraphics[width=0.7\linewidth]{images/plot_line_plot_losses_gen}
- 	\caption[Losses des generirenden GANs]{Der Loss über alle Epochen des GANs , welches für das generieren von Landschaftsbilder genutzt wurde.}
+ 	\caption[Losses des generirenden GANs]{\centering Loss über alle Epochen des \gls{acr-SNDCGAN}s für das Generieren von Landschaftsbildern}
  	\label{fig:plot_losses_gen}
  \end{figure}
  
- Die zweite Methode ist das Berechnen der \acrfull{acr-FID}. Diese bestimmt die
- Ähnlichkeit der echten und der generierten Bilder \cite{heusel_gans_2017}. Dies
- wird über die Fr\'echet Distanz gemacht, welche die Gaußglocken der
+ Die zweite Methode ist das Berechnen der \gls{acr-FID}. Die \gls{acr-FID} bestimmt die
+ Ähnlichkeit der echten und der generierten Bilder \cite{heusel_gans_2017}. Diese
+ wird über die Fr\'echet Distanz berechnet, welche die Gaußglocken der
  Verteilungen beider Domänen vergleicht. Die Gaußglocke wird über den Mittelwert
  $m$ und die Kovarianz $C$ festgelegt. 
  
  \[d^2((m,C),(m_w,C_w)) =  \|m-m_w\|^2_2 + trace(C+ C_w - 2(CC_w)^{\frac{1}{2}})
  \]
  
- Die in dieser Arbeit umgesetzte Implementierung von \gls{acr-FID} geht über
+ Die in dieser Arbeit umgesetzte Implementierung der \gls{acr-FID} geht über
  alle gespeicherten Modelle des Generators (hier jede fünfte Epoche). Anhand dieser
- werden  
- mittels über alle Epochen gleichbleibenden Zufallsvektoren Bilder generiert.
- Diese Bilder werden nun mit einer zufälligen aber festen Auswahl an echten
- Bilder verglichen, in dem alle Bilder durch den besten Discriminator bewertet
- werden. Beim Discriminator müssen die letzten beiden Schichten entfernt werden
+ werden,  
+ mittels über alle Epochen gleichbleibenden Zufallsvektoren, Bilder generiert.
+ Diese generierten Bilder werden nun mit einer zufälligen, aber festen Auswahl an echten
+ Bilder verglichen. Dabei werden alle Bilder durch den besten Discriminator bewertet. Beim Discriminator müssen die letzten beiden Schichten entfernt werden
  und durch eine Pooling-Schicht mit anschließendem Abflachen ersetzt werden,
  damit die Berechnung der Mittelwerte und Kovarianzen durchgeführt werden kann. 
  
- Die Auswertung des genutzten Modells unter Verwendung des Discriminators mit
- geringsten Loss ist in Abbildung \ref{fig:plot_fids_gen} sichtbar. Über die
+ Die Auswertung des genutzten Modells, unter Verwendung des Discriminators mit
+ dem niedrigsten Loss, ist in Abbildung \ref{fig:plot_fids_gen} sichtbar. Über die
  Approximation ist klar zu erkennen, dass der Wert im Laufe der Zeit fallend
- ist, was eine Annäherung der generierten Bilder zu den echten Bilder
- widerspiegelt. Genau diese Eigenschaft ist bei der Generierung mittels GANs
+ ist, was eine Annäherung der generierten Bilder zu den echten Bildern
+ widerspiegelt. Genau diese Eigenschaft ist bei der Generierung mittels \gls{acr-GAN}s
  gewünscht.
  
  \begin{figure}
@@ -397,10 +399,10 @@ verwendet \cite{arjovsky2017wasserstein}.
  \end{figure}
  
  Das Fazit aus den beiden Evaluierungsmethoden ist, dass das in dieser Arbeit
- implementierte und trainierte GAN die Aufgabe des Generierens von
- Landschaftsbilder gut umgesetzt hat. Die Losses des gesamten Netzes pendeln
- sich auf feste Werte ein, bei denen es sich um das Minimum handelt. Sowie die
- Ergebnisse der \gls{acr-FID} zeigen, dass die generierten Bilder relativ ähnlich
+ implementierte und trainierte \gls{acr-SNDCGAN} die Aufgabe des Generierens von
+ Landschaftsbildern gut umgesetzt hat. Die Losses des gesamten Netzes pendeln
+ sich auf feste Werte ein, bei denen es sich um das Minimum handelt. Außerdem zeigen die
+ Ergebnisse der \gls{acr-FID}, dass die generierten Bilder relativ ähnlich
  zu echten Bilder sind, wodurch die generierten Bilder für den Menschen wie
  echte Landschaftsbilder wirken.
  %TODO: Bilder vergleich zeigen?
