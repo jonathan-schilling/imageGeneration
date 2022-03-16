@@ -169,6 +169,26 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
 
 
  \section{Evaluierung} % TODO Tim und Joshua
+ 
+ Das CycleGAN wurde 625 Epochen trainiert, dabei sind die Ergebnisse allerdings nicht 
+ zufriedenstellend. In \crefrange{fig:sub-dogtocat}{fig:sub-cattodog} kann man jeweils das 
+ Eingabebild und das Ausgabebild für die Transformationen Hund zu Katze und Katze zu Hund 
+ sehen. Es gibt mehrere wahrscheinliche Gründe für die relativ schlechten Ergebnisse. Zum einen 
+ zeigen die beiden Trainingsbilderdatensätze Hunde und Katzen von verschiedenen Perspektiven. 
+ Ein weiteres Problem des Bilderdatensatzes ist, dass die Bilder unterschiedliche Hintergründe 
+ haben, was kombiniert mit unterschiedlich großen Tieren und Perspektiven das Netz 
+ \enquote{verwirren} kann. Für diese Probleme wäre \gls{acr-funit} besser geeignet als das 
+ CycleGAN 
+ \cite{liu_few-shot_2019}. Hier wäre es Interessant das CycleGAN, wie ursprünglich geplant, mit
+ Landschaftsbildern zu trainieren, da diese kein Perspektiven und Hintergrundproblem aufweisen. 
+ Leider war dies aufgrund fehlender Bilderkategorien nicht möglich. Zudem konnte durch die 
+ limitierte Rechenleistung das GAN nur mit einer Batchgröße von 4 trainiert werden. Eine höhere 
+ Batchgröße hilf beim Generalisieren der Trainingsbilder. 
+ 
+ Dennoch kann man mithilfe der Loss Werte in \cref{fig:cycleganloss} erkennen, dass das CycleGAN 
+ fortschritte macht. Interessant ist hier, dass nach etwa 450 Epochen der Loss wieder steigt. Dies 
+ liegt vermutlich daran, dass es Overfitting gibt. 
+
 
  \paragraph{Perceptual Distance} Als Metrik für die Evaluierung der
  Bildmanipulation wird eine \emph{\gls{acr-PD}} \cite{pang2021image} verwendet, die aus dem
@@ -189,3 +209,60 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
  \cite{johnson_perceptual_2016,pang2021image}. Daher ist diese Distanz als
  Metrik geeignet, um die erfolgreiche Übertragung des Bildinhaltes durch ein
  \gls{acr-I2I} GAN zu bewerten.
+ 
+ Die Ergebnisse der Metrik sind in \crefrange{fig:sub-dogtocatpd}{fig:sub-cattodogpd} zu finden. 
+ Man kann über den Verlauf eine kleine Minderung der Distanz erkennen. Der Anstieg nach ungefähr 
+ 450 Epochen stimmt mit dem Loss überein. Die niedrigen Startwerte sind jedoch unerwartet und 
+ konnten nicht geklärt werden. 
+ 
+ 
+ 
+ 
+ \begin{figure}[ht]
+ 	\centering
+ 	\begin{subfigure}{\textwidth}
+ 		\centering
+ 		% include first image
+ 		\includegraphics[width=.8\linewidth]{images/dogToCat}  
+ 		\caption{Transformation Hund zu Katze}
+ 		\label{fig:sub-dogtocat}
+ 	\end{subfigure}
+ 	\newline
+ 	\begin{subfigure}{\textwidth}
+ 		\centering
+ 		% include second image
+ 		\includegraphics[width=.8\linewidth]{images/catToDog}  
+ 		\caption{Transformation Hund zu Katze}
+ 		\label{fig:sub-cattodog}
+ 	\end{subfigure}
+ 	\caption{Put your caption here}
+ 	\label{fig:fig}
+ \end{figure}
+ 
+ \begin{figure}
+ 	\centering
+ 	\includegraphics[width=0.7\linewidth]{images/plot_line_plot_loss}
+ 	\caption{}
+ 	\label{fig:cycleganloss}
+ \end{figure}
+ 
+  \begin{figure}[ht]
+ 	\centering
+ 	\begin{subfigure}{\textwidth}
+ 		\centering
+ 		% include first image
+ 		\includegraphics[width=.8\linewidth]{images/plot_line_plot_fidsdogcat}  
+ 		\caption{Perceptual Distance zwischen Hundebildern und den daraus generierten Katzenbildern}
+ 		\label{fig:sub-dogtocatpd}
+ 	\end{subfigure}
+ 	\newline
+ 	\begin{subfigure}{\textwidth}
+ 		\centering
+ 		% include second image
+ 		\includegraphics[width=.8\linewidth]{images/plot_line_plot_fidscatdog}  
+ 		\caption{Perceptual Distance zwischen Katzenbildern und den daraus generierten Hundebildern}
+ 		\label{fig:sub-cattodogpd}
+ 	\end{subfigure}
+ 	\caption{Put your caption here}
+ 	\label{fig:fig}
+ \end{figure}
