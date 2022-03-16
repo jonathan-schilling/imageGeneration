@@ -1,16 +1,29 @@
 \chapter{Manipulieren von Bildern}\label{chp:bildmanipulation} %10 Seiten
 \glsresetall
 
- Wie aus Kapitel \ref{chp:bildgenerierung} festzustellen ist, können gute Landschaftsbilder erzeugt werden. Deshalb folgt nun der nächste Schritt, das manipulieren der Bilder. Das Ziel ist es ein Landschaftsbilder zu verschiedenen Tageszeit zu haben, dafür soll der Inhalt der Eingabe beibehalten werden,  der Stile des Bildes sich aber der Tageszeit anpassen. Zum Beispiel aus einem Bild am Tag soll ein Bild bei Nacht werden.
+Neben dem Erzeugen von Landschaftsbildern (\cref{chp:bildgenerierung}), ist der
+zweite Teil dieses Projektes das Manipulieren der Bilder. Das Ziel ist es,
+Landschaftsbilder zu verschiedenen Tageszeiten zu erhalten. Dafür soll der
+Inhalt der Eingabe beibehalten werden,  der Stil des Bildes sich aber der
+Tageszeit anpassen. Zum Beispiel soll aus einem Bild am Tag ein Bild bei Nacht
+werden.
  
  \section{Modelle} % Dani
- Für das manipulieren von Bilder gibt es verschieden Ansätze. Eingegrenzt wurde diese durch den Datensatz, da die Bilder nicht in Paaren vorliegen, es also zu einem Eingabebild keine entsprechendes Bild in der Zieldomain gibt und das Verfahren unsupervised sein soll. %vllt warum unsupervised?
- In Rahmen dieser Arbeit wurden sich mit  zwei Ansätze genauer beschäftigt. Der erste Ansatz ist der des CycleGANs \cite{zhu2017unpaired}, welches mittels des cycle consistency losses versucht Bilder zwischen zwei Domänen zu transferieren. Der zweite Ansatz heißt  \gls{acr-funit} \cite{liu2019few} der sich am Vorgehen des Menschen Gehirns orientiert und versucht mit wenigen Bilder aus ähnlichen Domänen die Übersetzung zu lernen.
+ Für das Manipulieren von Bildern gibt es verschieden Ansätze (vgl. \cref{GANsBildmanipulation}). Eingegrenzt
+ wurden diese durch den genutzten Datensatz. Da die Bilder hier nicht in Paaren vorliegen, es
+ also zu einem Eingabebild keine entsprechendes Bild in der Zieldomain gibt,
+ muss ein unsupervised Verfahren verwendet werden.
+ Im Rahmen dieser Arbeit werden zwei Ansätze genauer betrachtet. Der erste
+ Ansatz ist der des CycleGANs \cite{zhu2017unpaired}, welches mittels des Cycle
+ Consistency Losses versucht Bilder zwischen zwei Domänen zu transferieren. Der
+ zweite Ansatz heißt  \gls{acr-funit} \cite{liu2019few}. Dieser orientiert sich am
+ Vorgehen des menschlichen Gehirns und versucht mit wenigen Bildern aus
+ ähnlichen Domänen die Übersetzung zu lernen.
  
  \subsection{CycleGAN}% Dani
  \label{sub:cyclegan}
- Durch das Fehlen von gepaarten Bilder fehlt eine Möglichkeit zu überprüfen, ob der Generator den Inhalt des Bildes bei behält. \citeauthor{zhu2017unpaired} \cite{zhu2017unpaired} lösen diese Problem durch einfügen einer weiteren Bedingung: Bilder sollen, wenn sie übersetzt wurden und anschließen wieder zurück umgewandelt werden, gleich sein bzw. sehr ähnlich. Dies wird mittels des cycle consistency loss umgesetzt. 
- Dazu benötigt man zwei GANs, eins welches aus der Eingabedomäne in die Zieldomäne übersetzt, $G: X \rightarrow Y$ und ein anderes welches das Gegenteil durchführt,   $F: Y \rightarrow X$.
+ Durch das Fehlen von gepaarten Bildern, fehlt eine Möglichkeit zu überprüfen, ob der Generator den Inhalt des Bildes beibehält. \citeauthor{zhu2017unpaired} \cite{zhu2017unpaired} lösen dieses Problem durch Einfügen einer weiteren Bedingung: Bilder sollen, wenn sie übersetzt wurden und anschließen wieder zurück umgewandelt werden, gleich sein bzw. sehr ähnlich. Dies wird mittels des Cycle Consistency Losses umgesetzt. 
+ Dazu benötigt man zwei GANs: Eines, welches aus der Eingabedomäne in die Zieldomäne übersetzt, $G: X \rightarrow Y$, und ein Anderes, welches das Gegenteil durchführt,   $F: Y \rightarrow X$.
  Der cycle consistency loss gibt an wie groß der Verlust zwischen dem ursprünglichen Bild und der Ausgabe nach dem manipulieren beider GANs. 
  Das Ziel ist es $F(G(X))\approx X$ sowie $G(F(Y))\approx Y$ durchzusetzen. Wie in Abbildung \ref{fig:cylce_loss} zusehen, wobei der Verlust jeweils zwischen $x$, $\hat{x}$ und $y$,$\hat{y}$ berechnet wird.
  Die jeweiligen GANs lernen dazu noch über den adversarial loss, also dem Feedback des jeweiligen Discriminators des GANs. 
