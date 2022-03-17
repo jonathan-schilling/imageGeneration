@@ -23,13 +23,19 @@ werden.
  \subsection{CycleGAN}% Dani
  \label{sub:cyclegan}
  Durch das Fehlen von gepaarten Bildern, fehlt eine Möglichkeit zu überprüfen, ob der Generator den Inhalt des Bildes beibehält. \citeauthor{zhu2017unpaired} \cite{zhu2017unpaired} lösen dieses Problem durch Einfügen einer weiteren Bedingung: Bilder sollen, wenn sie übersetzt wurden und anschließen wieder zurück umgewandelt werden, gleich sein bzw. sehr ähnlich. Dies wird mittels des Cycle Consistency Losses umgesetzt. 
- Dazu benötigt man zwei GANs: Eines, welches aus der Eingabedomäne in die Zieldomäne übersetzt, $G: X \rightarrow Y$, und ein Anderes, welches das Gegenteil durchführt,   $F: Y \rightarrow X$.
- Der cycle consistency loss gibt an wie groß der Verlust zwischen dem ursprünglichen Bild und der Ausgabe nach dem manipulieren beider GANs. 
- Das Ziel ist es $F(G(X))\approx X$ sowie $G(F(Y))\approx Y$ durchzusetzen. Wie in Abbildung \ref{fig:cylce_loss} zusehen, wobei der Verlust jeweils zwischen $x$, $\hat{x}$ und $y$,$\hat{y}$ berechnet wird.
- Die jeweiligen GANs lernen dazu noch über den adversarial loss, also dem Feedback des jeweiligen Discriminators des GANs. 
- Dadurch ergibt sich der Verlust des CycleGANs als
+ Dazu benötigt man zwei GANs: Eines, welches aus der Eingabedomäne in die Zieldomäne übersetzt, $G: X \rightarrow Y$, und ein Anderes, welches das Gegenteil bewirkt,   $F: Y \rightarrow X$.
+ Der Cycle Consistency Loss beschreibt die Größe des Unterschiedes zwischen dem
+ ursprünglichen Bild und dem wiederhergestellten Bild, welches durch das
+ sequentielle Anwenden der beiden GANs entsteht. 
+ Das Ziel ist es $F(G(X))\approx X$ sowie $G(F(Y))\approx Y$ durchzusetzen. Dies
+ ist in Abbildung \ref{fig:cylce_loss} dargestellt. Der Verlust wird dabei jeweils
+ zwischen
+ $x$, $\hat{x}$ und $y$,$\hat{y}$ berechnet.
+ Die jeweiligen GANs lernen dazu noch über den Adversarial Loss, also dem Feedback des jeweiligen Discriminators des GANs. 
+ Dadurch ergibt sich der Verlust des CycleGANs als:
  \[ \mathcal{L}(G,F,D_X,D_Y) = 	\mathcal{L}_{GAN}(G,D_Y,X,Y) + 	\mathcal{L}_{GAN}(F, D_X,Y,X) +\lambda 	\mathcal{L}_{cyc}(G,F)   \]
- wobei $D_X$ und $D_Y$ die Diskriminatoren für die jeweilige Domäne sind und  $\lambda$ die Wichtigkeit des cycle consistency loss festlegt. 
+ Dabei sind $D_X$ und $D_Y$ die Discriminators für die jeweilige Domäne und
+ $\lambda$ legt die Wichtigkeit des Cycle Consistency Losses fest. 
  Das Zeil des Lernens ist es 
  \[G^*,F^* = arg \min_{G,F} \max_{D_X,D_Y} \mathcal{L}(G,F,D_X,D_Y) \] zu lösen.
  
@@ -60,11 +66,11 @@ werden.
  		
  		\draw ([yshift=0.7cm]$(c.north east)!.5!(d.north west)$) --([yshift=-0.7cm]$(c.south east)!.5!(d.south west)$);
  	\end{tikzpicture}
- 	\caption[cycle consistency loss]{cycle consistency loss in beide Richtungen}
+ 	\caption[cycle consistency loss]{Cycle Consistency Loss in beide Richtungen}
  	\label{fig:cylce_loss}
  \end{figure}
  
- Die Architektur der genutzten Netze stammt von \citeauthor{johnson_perceptual_2016} \cite{johnson_perceptual_2016}. Für den Generator gibt es zwei Varianten, die eine für Eingabegröße $128 \times 128$ mit 6 Residual Blöcken und die andere für Eingabegröße $256 \times 256$ mit 9 Residual Blöcken (ResBlock), diese Blöcke führen zwei Convolution mit gleicher Anzahl an Filter aus. Als Normalisierung wird Instance Normalisierung genutzt, die ist eine Erweiterung der Batch Normalisierung \cite{ulyanov_instance_2016}. In \cref{tab:cycleGAN} ist der Aufbau der Generators und der Discriminatoren für die Variante mit Eingabegröße $256 \times 256$ zusehen.
+ Die Architektur der genutzten Netze stammt von \citeauthor{johnson_perceptual_2016} \cite{johnson_perceptual_2016}. Für den Generator gibt es zwei Varianten, die eine für Eingabegröße $128 \times 128$ mit 6 Residual Blöcken und die andere für Eingabegröße $256 \times 256$ mit 9 Residual Blöcken (ResBlock). Diese Blöcke führen zwei Convolutions mit gleicher Anzahl an Filtern aus. Als Normalisierung wird Instance Normalisierung genutzt, diese ist eine Erweiterung der Batch Normalisierung \cite{ulyanov_instance_2016}. In \cref{tab:cycleGAN} ist der Aufbau der Generators und der Discriminatoren für die Variante mit Eingabegröße $256 \times 256$ zu sehen.
  
  \begin{table}[]
  	\caption{CycleGAN Architektur}
@@ -133,99 +139,102 @@ werden.
  		\bigskip
  		\emph{Quelle:} Von \cite{zhu2017unpaired} übernommen.\\
  		\emph{Legende:} Der Kernel ist beschrieben im Format $[\text{x\_Größe},
- 		\text{y\_Größe}, \text{Schrittweite}]$;IN steht für InstanceNorm; LeakyReLu hat eine Neigung von $0,2$;
+ 		\text{y\_Größe}, \text{Schrittweite}]$;IN steht für InstanceNorm; LeakyReLu hat eine Neigung von $0,2$.
  	\end{center}
  \end{table}
  
  
- Durch Evaluierungen und Vergleiche konnten \citeauthor{zhu2017unpaired} beobachten, dass die wiederhergestellten Bilder und die echten Bilder ein gute Ähnlichkeit aufwiesen. Vor allem bei Manipulationen bei denen Farben und Texturen geändert werden. Genau diese Veränderungen sollen in dieser Arbeit mit Landschaftsbilder durchgeführt werden. 
+ Durch Evaluierungen und Vergleiche konnten \citeauthor{zhu2017unpaired} beobachten, dass die wiederhergestellten Bilder und die echten Bilder ein gute Ähnlichkeit aufwiesen. Vor allem bei Manipulationen bei denen Farben und Texturen geändert werden, wie es für die Veränderung von Landschaftsbildern der Fall wäre. 
  
  \subsection{FUNIT}% Dani
  \label{sub:funit}
- Der Ansatz von \citeauthor{liu2019few} \cite{liu2019few}  geht das Problem an, das es oft nicht genug Bilder in der Eingabe- und Zielklassen gibt. Es wurde ein Ansatz mit wenigen Versuche (few-shot) entwickelt. Hierbei wird das Modell mit Bilder aus verschieden Eingabeklassen trainiert und erst beim Testen werden die Bilder der Zielklasse genutzt.
- Dazu wurde eine neues Netzwerkdesign mit dem gegnerischen Training von GANs vereinigt, der Name diese Modells ist  \acrfull{acr-funit}. Dieses Netzwerk besteht aus insgesamt vier Netzen, drei im Generator und eins im Discriminator. Der Generator $G$ bekommt als Eingabe ein Bild $x$ aus der Klasse $C_x$ und ein paar Bilder $y_1,\dots,y_n$ aus einer anderen Eingabeklasse $C_y$. Die Ausgabe $\hat{x}$ sollte dann den Inhalt von Bild $x$ in dem Aussehen der Klasse $K_y$ sein. 
- Die drei Netze die zusammen den Generator ergeben heißen Inhalt Encoder$E_x$, Klassen Encoder $E_y$ und Decoder $F_x$.
- Der Inhalt des Eingabebilds $x$ wird durch den Inhalt Encoder in eine räumliche Feature-Map umgewandelt. Die andern Eingabebilder also  $y_1,\dots,y_n$ werden in den Klassen Encoder gegeben, der  jedes Bild auf eine latenten mittel Vektor ( intermediate latent vector) abbildet und anschließend den Mittelwert über alle Vektoren berechnet, zu sehen in Abbildung \ref{fig:funitmodelsimple}. 
- Mit den Ausgaben aus den beiden Encoder konstruiert der Decoder das Ausgabebild des Generators. 
+ Der Ansatz von \citeauthor{liu2019few} \cite{liu2019few}  geht das Problem an, dass es oft nicht genug Bilder in den Eingabe- und Zielklassen gibt. Dazu wurde eine Methode, die nur wenige Eingabedaten benötigt (few-shot) entwickelt. Hierbei wird das Modell mit Bildern aus verschieden Eingabeklassen trainiert und erst beim Testen werden die Bilder der Zielklasse genutzt.
+ Dazu wurde eine neues Netzwerkdesign mit dem kompetitiven Training von GANs vereinigt. Der Name diese Modells ist  \acrfull{acr-funit}. Dieses Netzwerk besteht aus insgesamt vier Teilnetzen, drei im Generator und eins im Discriminator. Der Generator $G$ bekommt als Eingabe ein Bild $x$ aus der Klasse $C_x$ und eine Reihe von Bildern $y_1,\dots,y_n$ aus einer anderen Eingabeklasse $C_y$. Die Ausgabe $\hat{x}$ sollte dann der Inhalt von Bild $x$ in dem Stil der Klasse $K_y$ sein. 
+ Die drei Netze, die zusammen den Generator ergeben, sind der Inhalt-Encoder $E_x$, der Klassen-Encoder $E_y$ und der Decoder $F_x$.
+ Der Inhalt des Eingabebilds $x$ wird durch den Inhalt-Encoder in eine räumliche Feature-Map umgewandelt. Die andern Eingabebilder $y_1,\dots,y_n$ werden in den Klassen-Encoder gegeben, der jedes Bild auf einen Latenten Mittel Vektor (\emph{intermediate latent vector}) abbildet und anschließend den Mittelwert über alle Vektoren berechnet, zu sehen in Abbildung \ref{fig:funitmodelsimple}. 
+ Mit den Ausgaben aus den beiden Encodern konstruiert der Decoder das Ausgabebild des Generators. 
  \[\hat{x} = G(x, y_1,\dots,y_n)= F_x(E_x(x), E_y(y_1,\dots,y_n))\]
  
- Der Discriminator $D$ hat für jede Klasse die Aufgabe zu entscheiden, ob ein Bild echt ist oder durch den Generator erzeugt wurde. Es wird nur bestraft, wenn bei einem echten Bild nicht die richtige Klasse erkannt wird und wenn ein generierte Bild der Zielklasse zugeordnet wird. Der Generator bekommt nur dann eine Bestrafung, wenn das generiert Bilder nicht der gewünschten Klasse zugeordnet wurde.
+ Der Discriminator $D$ hat für jede Klasse die Aufgabe zu entscheiden, ob ein Bild echt ist oder durch den Generator erzeugt wurde. Es wird nur bestraft, wenn bei einem echten Bild nicht die richtige Klasse erkannt wird und wenn ein generiertes Bild der Zielklasse zugeordnet wird. Der Generator bekommt nur dann eine Bestrafung, wenn das generierte Bild nicht der gewünschten Klasse zugeordnet wurde.
  
  Beim Lernen wird das lösen folgender Gleichung versucht:
  
  \[\min_{D} \max_{G} \mathcal{L}_{GAN}(D,G) + \lambda_R \mathcal{L}_R(G) + \lambda_F \mathcal{L}_{F}(G) \]
  
- wobei $ \mathcal{L}_{GAN}(D,G)$ für den Loss des gesamten GANs,$ \mathcal{L}_R(G)$ den der Bildinhaltswiederherstellung und $\mathcal{L}_{F}(G) $ den der Feature-Abstimmung  steht. 
+ wobei $ \mathcal{L}_{GAN}(D,G)$ für den Loss des gesamten GANs, $ \mathcal{L}_R(G)$ für den der Bildinhaltswiederherstellung und $\mathcal{L}_{F}(G) $ den der Feature-Abstimmung  steht. 
  
- Bei vergleichen mit anderen gängigen Ansätzen schnitt  \gls{acr-funit}  besser ab und benötigt dabei eine kleineren Datensatz \cite{liu2019few}. Diese beiden Vorteile bieten sich für die Manipulation die in dieser Arbeit durchgeführt werden soll an.
+ Bei Vergleichen mit anderen gängigen Ansätzen, schnitt  \gls{acr-funit}  besser ab und benötigt dabei einen kleineren Datensatz \cite{liu2019few}. Diese beiden Vorteile bieten sich für die Manipulation, die in dieser Arbeit durchgeführt werden soll, an.
  
  \begin{figure}[h]
  	\centering
  	\includegraphics[width=0.8\linewidth]{images/Funit_Model_simple}
- 	\caption[Modell FUNIT]{Modell des Generator von FUNIT}
+ 	\caption[Modell FUNIT]{Modell des Generators von FUNIT}
  	\label{fig:funitmodelsimple}
  \end{figure}
  
 
  
  \section{Implementierung} % Tim nach Implementierung Generieren
-  Für die Implementierung wurde sich auf Grund des Datensatzes und der beschränken Rechenleistung für das CycleGAN entschieden. Dieser wurde mit Tensorflow und Keras umgesetzt. Da dieses GAN deutlich größer als das \gls{acr-SNDCGAN} ist, konnte es, aufgrund der beschränkten Computerressourcen, nur einmal trainiert werden. Alle Trainingsparameter wurden vorher festgelegt, wobei die Erfahrung aus \cref{sec:gen_impl} genutzt wurden.
+  Für die Implementierung der Bildmanipulation benutzt das Projekt, aufgrund des Datensatzes und der beschränken Rechenleistung, das CycleGAN. Dieses wurde mit Tensorflow und Keras umgesetzt. Da dieses GAN deutlich größer als das \gls{acr-SNDCGAN} (siehe \cref{subsec:mod:sndc}) ist, konnte es, aufgrund der beschränkten Computerressourcen, nur einmal trainiert werden. Alle Trainingsparameter wurden vorher festgelegt, wobei die Erfahrungen aus \cref{sec:gen_impl} genutzt wurden.
  
  \subsection{Umsetzung in Tensorflow/Keras}
- Wie auch für das \gls{acr-SNDCGAN} wurde ein \enquote{Sequential model} von Keras~\cite{keras:SequentialModel} verwendet um die einzelnen Schichten abzubilden. Da es nicht alle benötigten Netzschichten in Keras  implementiert sind mussten zudem für die ResBlock und ReflectionPadding2D Schichten, siehe \cref{sub:cyclegan}, sowie für Tanh,  eigene Klassen geschrieben werden, welche von einer abstrakten Keras Schicht erben. 
+ Wie auch für das \gls{acr-SNDCGAN} wurde ein \enquote{Sequential model} von Keras~\cite{keras:SequentialModel} verwendet um die einzelnen Schichten abzubilden. Da nicht alle benötigten Netzschichten in Keras  vorimplementiert sind, mussten zudem für die \texttt{ResBlock} und \texttt{ReflectionPadding2D} Schichten \cite[vgl.][]{zhu2017unpaired}, sowie für \texttt{Tanh},  eigene Klassen geschrieben werden, welche von einer abstrakten Keras Schicht erben. 
  
- Das Training des CycleGAN wurde ähnlich wie das \gls{acr-SNDCGAN} in \cref{sec:gen_impl} implementiert. Ebenfalls wurde es durch Checkpoints ermöglicht das Netz jederzeit anzuhalten und später weiter zu trainieren. Adam \cite{tf:adam} wurde als Optimizer, und GradientTapes \cite{tf:gradientape} zur Berechnung der Gradienten, verwendet.
+ Das Training des CycleGAN wurde ähnlich wie das des \gls{acr-SNDCGAN} in \cref{sec:gen_impl} implementiert. Ebenfalls wurde es durch Checkpoints ermöglicht das Netz jederzeit anzuhalten und später weiter zu trainieren. Adam \cite{tf:adam} wurde als Optimizer und GradientTapes \cite{tf:gradientape} zur Berechnung der Gradienten verwendet.
  
-Die Optimizer sind identisch parametrisiert und wurden wie in der Implementierung von \cite{brownlee_how_2019-1} auf eine Lernrate von 2e-4 und beta1 auf 0.5 gesetzt. 
+Die Optimizer sind identisch parametrisiert und wurden wie in der Implementierung von \cite{brownlee_how_2019-1} auf eine Lernrate von 2e-4 und ein \texttt{beta1} von 0.5 gesetzt. 
 
-Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainiert werden ist es sehr speicherintensiv zu trainieren. Nur dadurch, dass einzelne Trainingsschritte in eine Funktion mit dem \enquote{tf.function} decorater \cite{noauthor_tffunction_nodate}, ausgelagert sind kann die stärkste dem Projekt zur Verfügung stehende Grafikkarte genug speicher bieten, um das Training mit einer geringen Batchgröße durchzuführen. 
+Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainiert werden, ist das Training sehr speicherintensiv. Nur dadurch, dass einzelne Trainingsschritte in eine Funktion mit dem \texttt{tf.function} Decorator \cite{noauthor_tffunction_nodate} ausgelagert sind, kann die stärkste dem Projekt zur Verfügung stehende Grafikkarte genug Speicher bieten, um das Training – mit einer geringen Batchgröße – durchzuführen. 
 
 
  \section{Evaluierung} % TODO Tim und Joshua
  
  Das CycleGAN wurde 625 Epochen trainiert, dabei sind die Ergebnisse allerdings nicht 
- zufriedenstellend. In \crefrange{fig:sub-dogtocat}{fig:sub-cattodog} kann man jeweils das 
- Eingabebild und das Ausgabebild für die Transformationen Hund zu Katze und Katze zu Hund 
+ zufriedenstellend. In \cref{fig:sub-dogtocat} und \ref{fig:sub-cattodog} kann man jeweils ein 
+ Eingabebild und das Ausgabebild für die Transformationen Hund zu Katze bzw. Katze zu Hund 
  sehen. Es gibt mehrere wahrscheinliche Gründe für die relativ schlechten Ergebnisse. Zum einen 
  zeigen die beiden Trainingsbilderdatensätze Hunde und Katzen von verschiedenen Perspektiven. 
  Ein weiteres Problem des Bilderdatensatzes ist, dass die Bilder unterschiedliche Hintergründe 
  haben, was kombiniert mit unterschiedlich großen Tieren und Perspektiven das Netz 
  \enquote{verwirren} kann. Für diese Probleme wäre \gls{acr-funit} besser geeignet als das 
  CycleGAN 
- \cite{liu2019few}. Hier wäre es Interessant das CycleGAN, wie ursprünglich geplant, mit
- Landschaftsbildern zu trainieren, da diese kein Perspektiven und Hintergrundproblem aufweisen. 
+ \cite{liu2019few}. Hier wäre es interessant das CycleGAN, wie ursprünglich geplant, mit
+ Landschaftsbildern zu trainieren, da diese keine Perspektiven und Hintergrundprobleme aufweisen. 
  Leider war dies aufgrund fehlender Bilderkategorien nicht möglich. Zudem konnte durch die 
  limitierte Rechenleistung das GAN nur mit einer Batchgröße von 4 trainiert werden. Eine höhere 
- Batchgröße hilf beim Generalisieren der Trainingsbilder. 
+ Batchgröße hilft beim Generalisieren der Trainingsbilder. 
  
- Dennoch kann man mithilfe der Loss Werte in \cref{fig:cycleganloss} erkennen, dass das CycleGAN 
- fortschritte macht. Interessant ist hier, dass nach etwa 450 Epochen der Loss wieder steigt. Dies 
- liegt vermutlich daran, dass es Overfitting gibt. 
+ Dennoch kann man mithilfe der Loss-Werte in \cref{fig:cycleganloss} erkennen, dass das CycleGAN 
+ Fortschritte macht. Interessant ist hier, dass nach etwa 450 Epochen der Loss wieder steigt. Dies 
+ liegt vermutlich an dem Auftreten von Overfitting. 
 
 
- \paragraph{Perceptual Distance} Als Metrik für die Evaluierung der
+ Als objektive Metrik für die Evaluierung der
  Bildmanipulation wird eine \emph{\gls{acr-PD}} \cite{pang2021image} verwendet, die aus dem
  \emph{Perceptual Feature Reconstruction Loss} von
  \citeauthor{johnson_perceptual_2016} \cite{johnson_perceptual_2016} abgeleitet ist. Dazu wird, ähnlich der
- \gls{acr-FID}, die Aktivierung einer versteckten Schicht eines
+ \gls{acr-FID} (vgl. \cref{evalGen}), die Aktivierung einer versteckten Schicht eines
  Bildklassifizierungsnetzes verglichen. In diesem Fall wird die 16-Schichten
  Variante des \emph{VGG} Netzes \cite{simonyan2014very} verwendet, welches auf
  dem ImageNet \cite{russakovsky2015imagenet} Datensatz trainiert wurde. Von diesem
  wird konkret die Aktivierung der drittletzten Convolution Schicht betrachtet.
- Die \gls{acr-PD} für zwei Bilder $x$ und $y$ berechnet sich dann zu $pd(x,y) = \frac{1}{HWC}
- ||\phi(x) - \phi(y)||_2^{2}$, wobei $\phi(x)$ die Aktivierung der drittletzten
- Schicht des VGG Netzes bei Eingabe $x$ ist und $H \times W \times C$ das Format
- der Aktivierung ist. Die Aktivierung einer tieferen
+ Die \gls{acr-PD} für zwei Bilder $x$ und $y$ berechnet sich dann als:
+ \begin{displaymath}
+	pd(x,y) = \frac{1}{HWC} ||\phi(x) - \phi(y)||_2^{2}
+ \end{displaymath}
+ Dabei ist $\phi(x)$ die Aktivierung der drittletzten
+ Schicht des VGG Netzes bei Eingabe $x$ und $H \times W \times C$ das Format
+ der Aktivierung. Die Aktivierung einer tieferen
  Convolution Schicht eines Klassifikationsnetzes, wie sie hier verwendet wird,
- ermöglicht es Bilder auf die Unterschiede im Inhalt zu bewerten, wobei
+ ermöglicht es Bilder auf die Unterschiede im Inhalt zu vergleichen, wobei
  Unterschiede im Stil weitestgehend ignoriert werden
  \cite{johnson_perceptual_2016,pang2021image}. Daher ist diese Distanz als
  Metrik geeignet, um die erfolgreiche Übertragung des Bildinhaltes durch ein
- \gls{acr-I2I} GAN zu bewerten.
+ Image-to-Image Translation GAN zu bewerten.
  
- Die Ergebnisse der Metrik sind in \crefrange{fig:sub-dogtocatpd}{fig:sub-cattodogpd} zu finden. 
+ Die Ergebnisse der Metrik für das trainierte CycleGAN, sind in den Abbildungen \ref{fig:sub-dogtocatpd} und \ref{fig:sub-cattodogpd} zu finden. 
  Man kann über den Verlauf eine kleine Minderung der Distanz erkennen. Der Anstieg nach ungefähr 
- 450 Epochen stimmt mit dem Loss überein. Die niedrigen Startwerte sind jedoch unerwartet und 
+ 450 Epochen stimmt mit dem des Losses überein. Die niedrigen Startwerte sind jedoch unerwartet und 
  konnten nicht geklärt werden. 
  
  
@@ -248,13 +257,13 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
  		\caption{Transformation Hund zu Katze}
  		\label{fig:sub-cattodog}
  	\end{subfigure}
- 	\caption{Put your caption here}
+ 	\caption{Beispiel-Ergebnisse des CycleGANs}
  \end{figure}
  
  \begin{figure}
  	\centering
  	\includegraphics[width=0.7\linewidth]{images/plot_line_plot_loss}
- 	\caption{}
+ 	\caption{\centering Loss über alle Epochen des CycleGAN Trainings}
  	\label{fig:cycleganloss}
  \end{figure}
  
@@ -264,7 +273,7 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
  		\centering
  		% include first image
  		\includegraphics[width=.8\linewidth]{images/plot_line_plot_fidsdogcat}  
- 		\caption{Perceptual Distance zwischen Hundebildern und den daraus generierten Katzenbildern}
+ 		\caption{PD zwischen Hundebildern und den daraus generierten Katzenbildern}
  		\label{fig:sub-dogtocatpd}
  	\end{subfigure}
  	\newline
@@ -272,9 +281,9 @@ Da das CycleGAN aus vier mehrschichtigen Netzen besteht, welche zusammen trainie
  		\centering
  		% include second image
  		\includegraphics[width=.8\linewidth]{images/plot_line_plot_fidscatdog}  
- 		\caption{Perceptual Distance zwischen Katzenbildern und den daraus generierten Hundebildern}
+ 		\caption{PD zwischen Katzenbildern und den daraus generierten Hundebildern}
  		\label{fig:sub-cattodogpd}
  	\end{subfigure}
- 	\caption{Put your caption here}
+ 	\caption{Auswertung der Perceptual Distance (PD) für das trainierte CycleGAN}
  	\label{fig:fig}
  \end{figure}
