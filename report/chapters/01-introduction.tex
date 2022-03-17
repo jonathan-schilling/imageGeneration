@@ -1,0 +1,43 @@
+\chapter{Einleitung}\label{chp:einleitung}%2 Seiten Jonathan
+\glsresetall
+%Hinführung
+%Probelmstellung
+%Ergebnisse 
+%Aufbau
+
+Seit einigen Jahren verfügen die macOS Versionen über dynamische Desktophintergründe. Diese Hintergrundbilder sind
+Landschaften, welche zu verschiedenen Uhrzeiten abgebildet werden, und immer zur 
+entsprechenden Tageszeit angezeigt werden. Dieses Feature lies die Frage aufkommen, wie 
+solche Bildersets erstellt werden können, ohne jedoch zu jeder benötigten Uhrzeit ein Foto zu 
+machen. 
+
+Da sich neuronale Netze -- im konkreten Generative Adversarial Networks (GANs) -- gut für eine 
+solche Anwendung eigenen, ist das Ziel dieser Projektarbeit, sich dem Thema zu nähern und eine 
+Anwendung zu entwickeln, die ein Basisbild automatisch in eine andere Tageszeit transferiert. 
+
+Das erste Ziel auf dem Weg zu einer solchen Anwendung war das grundsätzliche Generieren von 
+Landschaftsbildern aus einem Zufallsvektor. Anhand dieser Aufgabe sollten erste Erfahrungen mit 
+der Implementierung von GANs und der Beschaffung von Datensätzen gesammelt werden. Erst 
+anschließend sollten kompliziertere Netzwerke implementiert werden, die dann das Manipulieren von 
+Bildern ermöglichen.
+
+Das Finden eines passenden Datensatzes war allerdings schwieriger als 
+erwartet und auch die ersten Lernversuche zeigten, dass die zur Verfügung stehenden 
+Rechenkapazitäten nicht für komplexe Netze reichen. Daher musste das Thema der Projektarbeit in 
+\glqq Generieren und Manipulieren von Bildern mit GANs\grqq\ geändert werden und die Zielsetzung 
+des Manipulierens der Tageszeit von Landschaftsbildern wurde zum Manipulieren von Hunde- bzw. 
+Katzenbildern.
+
+Unter diesem Thema wurden in der Projektarbeit verschiedene GAN-Architekturen untersucht und 
+letztendlich ein SNDCGAN, sowie ein CycleGAN implementiert. Diese beiden Umsetzungen konnten 
+erfolgreich trainiert werden, wobei die Ergebnisse des CycleGANs noch deutlich 
+verbesserungsfähig sind. Das SNDCGAN hingegen liefert zufriedenstellende Bilder auf denen 
+(schlecht aufgelöste) Landschaften zu erkennen sind.
+
+Im Folgenden ist zunächst in \autoref{chp:forschungsstand} der Stand der Forschung beschrieben. 
+Anschließend thematisiert das Kapitel \enquote{Datensatz} (\autoref{chp:datensatz}) alle 
+erforderlichen Schritte, die nötig waren, um einen verwendbaren Datensatz herunterzuladen und 
+vorzubereiten. Die \autoref{chp:bildgenerierung} und \ref{chp:bildmanipulation} behandeln 
+jeweils die Modelle von neuronalen Netzen, wie auch deren Implementierung und Auswertung für 
+das Generieren bzw. Manipulieren von Bildern. Abschließend werden die Ergebnisse dieser 
+Projektarbeit im Fazit (\autoref{chp:fazit}) zusammengefasst.
