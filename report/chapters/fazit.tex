@@ -1,21 +1,21 @@
 \chapter{Fazit}\label{chp:fazit} % Dani
 \glsresetall
 
-Die Motivation dieser Projektarbeit war es dynamische Wallpaper, die sich je nach 
-Tageszeit verändern, zu generieren. Dafür sollte jeweils ein Generative Adversarial Network (GAN) für das 
-Erzeugen von Landschaftsbildern und eines für das Manipulieren dieser Bilder 
+Die Motivation dieser Projektarbeit war es dynamische Wallpaper zu generieren, die sich je nach 
+Tageszeit verändern. Dafür sollte jeweils ein Generative Adversarial Network (GAN) für das 
+Erzeugen von Landschaftsbildern und das Manipulieren dieser Bilder 
 implementiert werden. 
 
 Leider gab es einige größere Hindernisse, wodurch gerade beim 
 Manipulieren die Ergebnisse nicht praktisch einsetzbar sind. Zum einen ist es eine große 
-Herausforderung einen geeigneten Bilderdatensatz zu finden bzw. zu erzeugen. Zum 
+Herausforderung einen geeigneten Bilderdatensatz zu finden bzw. zu erzeugen, zum 
 anderen benötigt das Trainieren bei den hier verwendeten Netzen sehr viel Rechenleistung 
 und moderne Hardware, um überhaupt zu laufen. Diese Hindernisse sind besonders beim 
 Bildmanipulieren relevant, da dort die Netze größer sind und zwei Bilderdatensätze 
 benötigt werden. Somit wurde aufgrund fehlender Bilder das Bild-manipulierende 
-\gls{acr-GAN} mit Hunde- und Katzenbildern trainiert. Zudem war es mit der zur Verfügung 
-stehenden Hardware nicht möglich komplexere Netze wie das in \cref{sub:funit} 
-beschriebene \gls{acr-funit} Netzwerk zu verwenden. Da Trainingszeiten bei mehreren 
+GAN mit Hunde- und Katzenbildern trainiert. Zudem war es mit der zur Verfügung 
+stehenden Hardware nicht möglich komplexere Netze, wie das in \cref{sub:funit} 
+beschriebene \gls{acr-funit} Netzwerk zu verwenden. Da die Trainingszeiten bei mehreren 
 hundert Stunden liegen konnten, war es außerdem schwierig verschiedene Ansätze zu 
 verfolgen und die Trainingsparameter zu optimieren. 
 
@@ -24,31 +24,31 @@ aufwendig, da alle Landschaftsbilder-Datensätze viele schlechte Bilder enthielt
 deshalb manuell gefiltert werden mussten. 
 
 Für das Generieren von Landschaftsbildern wurde schlussendlich ein \gls{acr-SNDCGAN} 
-verwendet. Dieses wurde mit über 7000 Hand sortierten Landschaftsbildern trainiert. 
-Dabei sind die generierten Landschaftsbilder auch als solche zu erkennen. Auffällig war, 
+verwendet. Dieses wurde mit über 7000 handsortierten Landschaftsbildern trainiert. 
+Dabei sind die Ergebnisse durchaus als Landschaftsbilder zu erkennen, allerdings ebenfalls als künstlich generierte Bilder. Auffällig war, 
 dass bei einer Bildauflösung von 128x72 Pixeln die Ergebnisse deutlich schlechter als 
 mit der Auflösung 256x144 sind. Hier wäre es interessant das Training mit einer noch 
-höheren Auflösung (auf besserer Hardware) abzuhalten und die Ergebnisse zu vergleichen. 
+höheren Auflösung (auf besserer Hardware) durchzuführen und die Ergebnisse zu vergleichen. 
 Zusätzlich zum  \gls{acr-SNDCGAN}  wurde auch ein \gls{acr-WGAN} implementiert. Da 
 das \gls{acr-SNDCGAN} in ersten Versuchen jedoch besser abgeschnitten hat und die 
 Hardwareressourcen begrenzt waren, wurde das \gls{acr-WGAN} nicht optimiert. Für das 
-Projekt wäre es ebenfalls interessant gewesen verschiedene \gls{acr-GAN} Architekturen 
+Projekt wäre es ebenfalls interessant gewesen, verschiedene GAN Architekturen 
 zum Bildgenerieren zu vergleichen, dies hätte jedoch hier den Rahmen gesprengt.
 
 Beim Manipulieren von Bildern sind die Ergebnisse deutlich schlechter als beim Generieren. 
 Dies liegt vor allem daran, dass der verwendete Hunde- und Katzendatensatz nicht 
 besonders groß ist und die Tiere von unterschiedlichen Richtungen in die Kamera schauen. 
-Des weiteren konnte das CycleGAN Grafikspeicher bedingt nur mit einer Batchgröße von drei 
-betrieben werden. Dadurch fällt es dem Netz schwerer zu generalisieren. Anstatt eines 
+Des weiteren konnte das CycleGAN, begingt durch den zu geringen Grafikspeicher, nur mit einer Batchgröße von drei 
+trainiert werden. Dadurch fällt es dem Netz schwerer zu generalisieren. Anstatt eines 
 CycleGANs wäre \gls{acr-funit} eventuell ebenfalls besser geeignet, dieses ist allerdings 
 komplexer und schon das CycleGAN konnte kaum trainiert werden. Auch eine höhere 
 Bildauflösung hätte helfen können, jedoch reichte der Grafikspeicher nur für eine 
 Auflösung von 128x128 Pixeln.
 
-\gls{acr-GAN}s sind unglaublich mächtige neuronale Netzwerke, die eine Eingabe in eine 
-antrainierte Datendomäne abbilden. Dabei sind Sie allerdings sehr aufwendig zu trainieren. 
-Zudem sind die Ergebnisse sehr stark von dem verwendeten Datensatz abhängig. Um 
-bessere Resultate zu erzielen wird deutlich mehr Rechenleistung benötigt.
+Generative Adversarial Networks sind unglaublich mächtige neuronale Netzwerke, die eine Eingabe in eine 
+antrainierte Datendomäne abbilden. Dabei sind sie allerdings sehr aufwendig zu trainieren.
+Die Ergebnisse sind sehr stark von dem verwendeten Datensatz abhängig und um 
+gute Resultate zu erzielen, wird sehr viel Rechenleistung benötigt.
 
 
 
