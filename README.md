@@ -4,15 +4,15 @@ A team project as part of the Computer Science Master's program at the Universit
 
 ## Project Description
 
-The scope of this project was to learn about Generative Adversarial Networks (GANs). Therefore the main task was to generate landscape images from a vector of random numbers. Furthermore we tried to manipulate images. The first intention for manipulation was to change the daytime of landscape images (e.g. image at day to night). Due to lack of available training data this project goal had to be changed to transformations from dog to cat and otherwise. For that task the Cycle GAN architecture [1] was implemented. The results of the manipulation task were not satisfying for the available data and limited private computing power.
+The scope of this project was to learn about Generative Adversarial Networks (GANs). Therefore the main task was to generate landscape images starting from a vector of random numbers. Furthermore we tried to manipulate images. The first intention for manipulation was to change the daytime of landscape images (e.g. image at day to night). Due to a lack of available training data this project goal had to be changed to transformations from dog to cat and reverse. For that task the Cycle GAN architecture [1] was implemented. The results of the manipulation task were not satisfying for the available data and limited private computing power.
 
 ### Generation of Landscape Images
 
-For image generation two GAN architectures were used: the SNDCGAN [2] and the Wasserstein GAN [3]. Both networks were trained on images from the Open Images Dataset v4 [4]. The SNDCGAN was more successful than the Wasserstein GAN and examples of generated landscape images from the SNDCGAN are shown below. They have a very low resolution but elements of landscapes are visible.
+For image generation two GAN architectures were used: SNDCGAN [2] and Wasserstein GAN [3]. Both networks were trained on images from the Open Images Dataset v4 [4]. The SNDCGAN was more successful than the Wasserstein GAN and examples of generated landscape images from the SNDCGAN are shown below. They have a very low resolution but elements of landscapes are visible.
 
-My main task was the implementation and finetuning of the SNDCGAN. Additionally, I had the major part of preparing the Open Images v4 into an appropriate dataset. Initially Open Images v4 had around 26.000 images. In order to achive better results on our limited hardware we reduced the amount of images to 7.000 by keeping just images with good quality. 
+My main task was the implementation and finetuning of the SNDCGAN. Additionally, I worked on the preparation of the Open Images v4 (consisting around 26.000 images) to create an appropriate dataset. In order to achive better results on our limited hardware we reduced the amount of images to 7.000 by keeping just images with good quality. 
 
-For training of the SNDCGAN a GeForce GTX 1660 Super Gaming X from MSI was used with 6 GB graphics memory. In order to apply image batches for the learning task the input resolution of the trained images only was 256x144 pixels. There was a trade-off between a higher resolution with more information for learning and a higher batch size and therefore better generalization.
+For training of the SNDCGAN a GeForce GTX 1660 Super Gaming X from MSI was used with 6 GB graphics memory. In order to apply image batches for learning, a low input resolution of 256x144 pixels had to be used. Thereby was a trade-off between a higher resolution with more information for learning and a higher batch size causing a better generalization.
 
 In the given setting the results of the SNDCGAN were satisfying.
 
