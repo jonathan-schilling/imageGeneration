@@ -4,7 +4,7 @@ A team project as part of the Computer Science Master's program at the Universit
 
 ## Project Description
 
-The scope of this project was to learn about Generative Adversarial Networks (GANs). Therefore the main task was to generate landscape images starting from a vector of random numbers. Furthermore we tried to manipulate images. The first intention for manipulation was to change the daytime of landscape images (e.g. image at day to night). Due to a lack of available training data this project goal had to be changed to transformations from dog to cat and reverse. For that task the Cycle GAN architecture [1] was implemented. The results of the manipulation task were not satisfying for the available data and limited private computing power.
+The scope of this project was to learn about Generative Adversarial Networks (GANs). Therefore the main task was to generate landscape images starting from a vector of random numbers. Furthermore we tried to manipulate images. The first intention for manipulation was to change the daytime of landscape images (e.g. image at day to night). Due to a lack of available training data this project goal had to be changed to transformations from dog to cat and reverse. For that task the Cycle GAN architecture [1] was implemented. The results of the manipulation task were not satisfying due to the bad quality of available data and limited private computing power.
 
 ### Generation of Landscape Images
 
