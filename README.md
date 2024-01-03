@@ -10,7 +10,7 @@ The scope of this project was to learn about Generative Adversarial Networks (GA
 
 For image generation two GAN architectures were used: SNDCGAN [2] and Wasserstein GAN [3]. Both networks were trained on images from the Open Images Dataset v4 [4]. The SNDCGAN was more successful than the Wasserstein GAN and examples of generated landscape images from the SNDCGAN are shown below. They have a very low resolution but elements of landscapes are visible.
 
-My main task was the implementation and finetuning of the SNDCGAN. Additionally, I worked on the preparation of the Open Images v4 (consisting around 26.000 images) to create an appropriate dataset. In order to achive better results on our limited hardware we reduced the amount of images to 7.000 by keeping just images with good quality. 
+My main task was the implementation and finetuning of the SNDCGAN. Additionally, I worked on the preparation of the Open Images v4 (consisting of around 26.000 images) to create an appropriate dataset. In order to achive better results on our limited hardware we reduced the amount of images to 7.000 by keeping just images with good quality. 
 
 For training of the SNDCGAN a GeForce GTX 1660 Super Gaming X from MSI was used with 6 GB graphics memory. In order to apply image batches for learning, a low input resolution of 256x144 pixels had to be used. Thereby was a trade-off between a higher resolution with more information for learning and a higher batch size causing a better generalization.
 
