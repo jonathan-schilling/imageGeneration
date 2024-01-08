@@ -18,13 +18,11 @@ In the given setting the results of the SNDCGAN were satisfying.
 
 <img src="results.png" alt="Results Landscape Image Generation" style="width:405;height:532px;">
 
-<br><br>
-<span style="font-size:x-small">
-    [1] Jun-Yan Zhu et al. „Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks“. In: Proceedings of the IEEE international conference on computer vision. 2017, S. 2223– 2232.<br>
-    [2] Takeru Miyato et al. „Spectral Normalization for Generative Adversarial Networks“. In: arXiv preprint arXiv:1802.05957 (2018).<br>
-    [3] Martin Arjovsky, Soumith Chintala und Léon Bottou. „Wasserstein GAN“. In: International conference on machine learning. PMLR. 2017, S. 214–223.<br>
-    [4] Alina Kuznetsova et al. „The Open Images Dataset V4: Unified image classification, object detection, and visual relationship detection at scale“. In: arXiv:1811.00982 (2018). arXiv: 1811.00982.
-</span>
+<br><br><br>
+[1] Jun-Yan Zhu et al. „Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks“. In: Proceedings of the IEEE international conference on computer vision. 2017, S. 2223–2232.<br>
+[2] Takeru Miyato et al. „Spectral Normalization for Generative Adversarial Networks“. In: arXiv preprint arXiv:1802.05957 (2018).<br>
+[3] Martin Arjovsky, Soumith Chintala und Léon Bottou. „Wasserstein GAN“. In: International conference on machine learning. PMLR. 2017, S. 214–223.<br>
+[4] Alina Kuznetsova et al. „The Open Images Dataset V4: Unified image classification, object detection, and visual relationship detection at scale“. In: arXiv:1811.00982 (2018).
 
 ## Project Structure
 
