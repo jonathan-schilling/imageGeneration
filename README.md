@@ -16,7 +16,7 @@ For training of the SNDCGAN a GeForce GTX 1660 Super Gaming X from MSI was used 
 
 In the given setting the results of the SNDCGAN were satisfying.
 
-<img src="results.png" alt="Results Landscape Image Generation" style="width:405;height:532px;">
+<img src="results.png" alt="Results Landscape Image Generation" style="width:405px;height:532px;">
 
 <br><br><br>
 [1] Jun-Yan Zhu et al. „Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks“. In: Proceedings of the IEEE international conference on computer vision. 2017, S. 2223–2232.<br>
